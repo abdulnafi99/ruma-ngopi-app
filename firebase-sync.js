@@ -10,6 +10,7 @@
      counters/orderNo                                        ← nombor pesanan seterusnya
      admins/{uid}: true                                      ← siapa boleh ubah store/* (set di console)
      pushSubs/{uid}/{id}    { sub, role }                    ← langganan Web Push setiap peranti
+     proofs/{no}            { img, memberId }                ← bukti bayaran DuitNow
 
    Akaun pelanggan: no telefon + kata laluan. Di Firebase Auth ia disimpan
    sebagai Email/Password dengan emel "<60xxxxxxxxx>@rumangopi.app".
@@ -273,6 +274,9 @@ RN.txMember = (id, fn, txEntry) => runTransaction(ref(db, `members/${id}`), m =>
   m.updatedAt = Date.now();
   return m;
 }).catch(fail("Kemas kini ahli"));
+/* Bukti bayaran DuitNow: proofs/{no} (gambar dalam database, dibaca admin) */
+RN.saveProof = (no, img, memberId) => set(ref(db, `proofs/${no}`), { img, memberId, ts: Date.now() });
+RN.getProof = async no => { const v = (await get(ref(db, `proofs/${no}`))).val(); return v && v.img || null; };
 RN.signInAdmin = (email, pass) => signInWithEmailAndPassword(auth, email, pass);
 RN.signOut = () => signOut(auth);
 
