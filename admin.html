@@ -339,6 +339,7 @@ label.btn{cursor:pointer}
 .ao-prods input{width:18px;height:18px;accent-color:var(--brand)}
 .ao-cats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .ao-cats button{font-size:12px;font-weight:700;padding:6px 11px;border-radius:99px;background:rgba(92,62,51,.07);color:var(--ink-2)}
+.pm-note{flex-basis:100%;margin:0;padding:8px 10px;border-radius:10px;background:rgba(20,164,77,.08);color:var(--ink-2)}
 .otbl{width:100%;border-collapse:collapse}
 .otbl th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:8px 10px 4px}
 .otbl td{padding:6px 10px;border-top:1px solid var(--line);vertical-align:middle}
@@ -346,7 +347,7 @@ label.btn{cursor:pointer}
 .otbl td:first-child{min-width:130px;width:42%}
 .otbl input.nm{width:100%;min-width:0;border:1px solid transparent;background:transparent;border-radius:9px;padding:7px;font-weight:600}
 .otbl input.nm:hover,.otbl input.nm:focus{border-color:var(--line);background:var(--bg);outline:none}
-.otbl input.pr{width:64px;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:7px 6px;font-family:var(--mono);text-align:right}
+.otbl input.pr{width:84px;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:7px 6px;font-family:var(--mono);text-align:right}
 .otbl tr.off td:not(:last-child):not(:nth-last-child(2)){opacity:.45}
 @media (max-width:600px){
   .otbl thead{display:none}
@@ -357,6 +358,7 @@ label.btn{cursor:pointer}
   .otbl td:first-child{flex:1 0 100%}
   .otbl td:nth-child(2){display:flex;align-items:center;gap:6px;margin-right:auto}
   .otbl td:nth-child(2)::before{content:"+RM";font-size:11px;font-weight:700;color:var(--ink-3)}
+  .otbl.pset td:nth-child(2)::before{content:"RM"}
   .otbl input.nm{border-color:var(--line);background:var(--bg)}
   .otbl input.pr{width:76px}
 }
@@ -1436,7 +1438,7 @@ function addonIndex(){
   const map=new Map();
   MENU.forEach(p=>(p.groups||[]).forEach(g=>{
     const k=gkey(g); if(!k) return;
-    if(!map.has(k)) map.set(k,{key:k,id:g.id,name:g.name,type:g.type,required:!!g.required,max:g.max||0,products:[],options:new Map()});
+    if(!map.has(k)) map.set(k,{key:k,id:g.id,name:g.name,type:g.type,required:!!g.required,max:g.max||0,priceMode:g.priceMode||null,products:[],options:new Map()});
     const e=map.get(k); e.products.push(p.id);
     (g.options||[]).forEach(o=>{ const ok=okey(o); if(!ok) return; if(!e.options.has(ok)) e.options.set(ok,{...o,count:0}); e.options.get(ok).count++; });
   }));
@@ -1449,7 +1451,7 @@ function renderAddons(){
     const opts=[...e.options.values()];
     return `<div class="tile ao-card">
       <h4>${esc(e.name)}</h4>
-      <div class="meta">${e.type==="single"?`Pilih satu${e.required?" · wajib":""}`:`Pilih banyak${e.max?` · had ${e.max}`:""}`} · digunakan oleh <b>${e.products.length}</b> item</div>
+      <div class="meta">${e.type==="single"?`Pilih satu${e.required?" · wajib":""}${e.priceMode==="set"?" · harga penuh":""}`:`Pilih banyak${e.max?` · had ${e.max}`:""}`} · digunakan oleh <b>${e.products.length}</b> item</div>
       <div class="ao-chips">${opts.map(o=>`<span class="${o.active===false?"off":""}">${esc(o.name)}<i>${Number(o.price||0)?"+"+Number(o.price).toFixed(2):"—"}</i></span>`).join("")}</div>
       <button class="btn ghost sm" data-action="editAddon" data-k="${esc(e.key)}">${icon("edit","width:16px;height:16px")}Edit add-on</button>
     </div>`;}).join("") || `<div class="tile empty">Belum ada add-on. Tekan "Tambah add-on".</div>`;
@@ -1457,7 +1459,7 @@ function renderAddons(){
 let gdraft=null;
 function editAddon(key){
   const e=key?addonIndex().find(x=>x.key===key):null;
-  gdraft = e ? { key:e.key, id:e.id, name:e.name, type:e.type, required:e.required, max:e.max, isNew:false,
+  gdraft = e ? { key:e.key, id:e.id, name:e.name, type:e.type, required:e.required, max:e.max, priceMode:e.priceMode, isNew:false,
       options:[...e.options.values()].map(o=>({orig:okey(o), id:o.id, name:o.name, price:+o.price||0, max:o.max||1, active:o.active!==false, count:o.count})), removed:[],
       products:new Set(e.products) }
     : { key:null, id:null, name:"", type:"multi", required:false, max:0, isNew:true, options:[{orig:null,name:"",price:0,max:1,active:true,count:0}], removed:[], products:new Set() };
@@ -1471,11 +1473,13 @@ function renderAddonDraft(){
     <label class="field"><span>Nama kumpulan</span><input class="input" id="aoName" value="${esc(g.name)}" maxlength="40" placeholder="cth. Topping"></label>
     <div class="ged-cfg" style="padding:0 0 12px">
       <div class="seg"><button type="button" class="${g.type==="single"?"on":""}" data-ao="type" data-v="single">Pilih satu</button><button type="button" class="${g.type==="multi"?"on":""}" data-ao="type" data-v="multi">Pilih banyak</button></div>
-      ${g.type==="single"?`<label class="cfg-item">Wajib <button type="button" class="switch ${g.required?"on":""}" data-ao="req" aria-label="Wajib"></button></label>`
+      ${g.type==="single"?`<label class="cfg-item">Wajib <button type="button" class="switch ${g.required?"on":""}" data-ao="req" aria-label="Wajib" ${g.priceMode==="set"?"disabled":""}></button></label>
+        <label class="cfg-item">Harga penuh <button type="button" class="switch ${g.priceMode==="set"?"on":""}" data-ao="pmode" aria-label="Harga penuh"></button></label>
+        ${g.priceMode==="set"?`<p class="note pm-note">Harga setiap pilihan = <b>harga item</b>. Harga asas item diabaikan.</p>`:""}`
         :`<span class="cfg-item">Had jumlah ${sstep(`data-ao="gmax"`,g.max||0,0,30,"Had jumlah")}</span>`}
     </div>
-    <div class="ged"><div style="overflow-x:auto"><table class="otbl">
-      <thead><tr><th>Pilihan</th><th>+RM</th>${g.type==="multi"?'<th class="c">Maks / item</th>':""}<th class="c">Aktif</th><th></th></tr></thead>
+    <div class="ged"><div style="overflow-x:auto"><table class="otbl ${g.priceMode==="set"?"pset":""}">
+      <thead><tr><th>Pilihan</th><th>${g.priceMode==="set"?"Harga RM":"+RM"}</th>${g.type==="multi"?'<th class="c">Maks / item</th>':""}<th class="c">Aktif</th><th></th></tr></thead>
       <tbody>${g.options.map((o,i)=>`<tr class="${o.active?"":"off"}">
         <td><input class="nm" data-aof="name" data-i="${i}" value="${esc(o.name)}" placeholder="Nama pilihan">${!g.isNew&&o.orig&&o.count<g.products.size?`<div class="note">dalam ${o.count} item</div>`:""}</td>
         <td><input class="pr" type="number" min="0" step="0.10" data-aof="price" data-i="${i}" value="${Number(o.price||0).toFixed(2)}"></td>
@@ -1499,7 +1503,10 @@ document.addEventListener("input",e=>{
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-ao]"); if(!b||!gdraft) return; const g=gdraft, d=b.dataset, i=+d.i;
   if(d.ao==="prod"){ b.checked?g.products.add(d.p):g.products.delete(d.p); $(".ao-prods").previousElementSibling.previousElementSibling.textContent=`Guna untuk item (${g.products.size}/${MENU.length})`; return; }
-  ({ type:()=>{g.type=d.v;}, req:()=>{g.required=!g.required;},
+  ({ type:()=>{g.type=d.v; if(d.v==="multi") g.priceMode=null;}, req:()=>{g.required=!g.required;},
+    pmode:()=>{
+      if(g.priceMode!=="set" && g.options.some(o=>!(+o.price>0)) && !confirm(`Bila "Harga penuh" dihidupkan, harga setiap pilihan menjadi harga item untuk SEMUA ${g.products.size} item yang dipilih.\n\nAda pilihan berharga RM0. Teruskan dan isi harga penuh untuk setiap pilihan?`)) return;
+      g.priceMode = g.priceMode==="set" ? null : "set"; if(g.priceMode) g.required=true; },
     gmax:()=>{g.max=Math.max(0,Math.min(30,(g.max||0)+ +d.d));},
     omax:()=>{const o=g.options[i]; o.max=Math.max(1,Math.min(20,(o.max||1)+ +d.d));},
     oact:()=>{g.options[i].active=!g.options[i].active;},
@@ -1526,14 +1533,16 @@ function saveAddon(){
     p.groups=p.groups||[];
     const idx=g.key?p.groups.findIndex(x=>gkey(x)===g.key):-1;
     if(!g.products.has(p.id)){ if(idx>=0) p.groups.splice(idx,1); return; }
-    if(idx<0){ p.groups.push({id:gid,name:g.name,type:g.type,...(g.type==="single"?{required:!!g.required}:{max:g.max||0}),options:opts.map(mkOpt)}); return; }
+    const pm = g.type==="single" && g.priceMode==="set";
+    if(pm) p.groups.forEach(x=>{ if(gkey(x)!==g.key) delete x.priceMode; });
+    if(idx<0){ p.groups.push({id:gid,name:g.name,type:g.type,...(g.type==="single"?{required:!!g.required,...(pm?{priceMode:"set"}:{})}:{max:g.max||0}),options:opts.map(mkOpt)}); return; }
     const cur=p.groups[idx], have=new Map((cur.options||[]).map(o=>[okey(o),o]));
     const next=[];
     opts.forEach(o=>{
       if(o.orig && have.has(o.orig)){ const c=have.get(o.orig); next.push({...c,...mkOpt({...o,id:c.id})}); }
       else if(!o.orig) next.push(mkOpt(o));               // pilihan baru → semua item dipilih
     });
-    p.groups[idx]={...cur,name:g.name,type:g.type,...(g.type==="single"?{required:!!g.required,max:undefined}:{max:g.max||0,required:undefined}),options:next};
+    p.groups[idx]={...cur,name:g.name,type:g.type,...(g.type==="single"?{required:!!g.required,max:undefined,priceMode:pm?"set":undefined}:{max:g.max||0,required:undefined,priceMode:undefined}),options:next};
     if(!p.groups[idx].options.length) p.groups.splice(idx,1);
   });
   MENU.forEach(p=>(p.groups||[]).forEach(x=>{ Object.keys(x).forEach(k=>x[k]===undefined&&delete x[k]); }));
@@ -1554,7 +1563,7 @@ function renderMenuAdmin(){
     return `<div class="tile prod-card ${p.active===false?"off":""}">
       <div class="top">${IMAGES[p.id]?`<div class="thumb"><img src="${IMAGES[p.id]}" alt=""></div>`:`<div class="icon-sq">${icon(p.icon||"cup")}</div>`}<span class="badge">${esc(p.cat||"Lain-lain")}</span></div>
       <h4>${esc(p.name)}</h4><p>${g.length} kumpulan add-on · ${nOpt} pilihan${lim?` · ${lim} dengan had kuantiti`:""}</p>
-      <div class="foot"><span class="price">${rmf(p.price)}</span>
+      <div class="foot"><span class="price">${(()=>{ const pg=(p.groups||[]).find(g=>g.type==="single"&&g.priceMode==="set"); if(!pg) return rmf(p.price); const ps=(pg.options||[]).filter(o=>o.active!==false).map(o=>+o.price||0); return ps.length?`${new Set(ps).size>1?"dari ":""}${rmf(Math.min(...ps))}`:rmf(p.price); })()}</span>
         <div class="row"><button class="switch ${p.active!==false?"on":""}" data-action="toggleProduct" data-p="${p.id}" aria-label="Aktif"></button>
         <button class="btn ghost sm" data-action="editProduct" data-p="${p.id}">${icon("edit","width:16px;height:16px")}Edit</button></div></div>
     </div>`;}).join("") || `<div class="tile empty">Belum ada produk. Tekan "Tambah produk".</div>`;
@@ -1579,7 +1588,7 @@ function renderDraft(){
     <h2>${draftIsNew?"Produk baru":"Edit produk"}</h2><p class="sub">Perubahan muncul dalam app pelanggan selepas disimpan.</p>
     <div class="grid g2" style="gap:0 12px">
       <label class="field"><span>Nama</span><input class="input" data-pf="name" value="${esc(draft.name)}" maxlength="40" placeholder="cth. Spanish Latte"></label>
-      <label class="field"><span>Harga asas (RM)</span><input class="input mono" type="number" min="0" step="0.10" data-pf="price" value="${Number(draft.price).toFixed(2)}"></label>
+      <label class="field"><span>${draft.groups.some(g=>g.priceMode==="set")?`Harga asas (tidak digunakan · harga ikut “${esc(draft.groups.find(g=>g.priceMode==="set").name||"pilihan")}”)`:"Harga asas (RM)"}</span><input class="input mono" type="number" min="0" step="0.10" data-pf="price" value="${Number(draft.price).toFixed(2)}" ${draft.groups.some(g=>g.priceMode==="set")?'style="opacity:.5"':""}></label>
       <label class="field"><span>Kategori</span><input class="input" data-pf="cat" value="${esc(draft.cat||"")}" list="catList"><datalist id="catList">${cats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist></label>
       <label class="field"><span>Penerangan</span><input class="input" data-pf="desc" value="${esc(draft.desc||"")}" maxlength="60"></label>
     </div>
@@ -1599,11 +1608,13 @@ function renderDraft(){
         <div class="ged-cfg">
           <div class="seg"><button type="button" class="${g.type==="single"?"on":""}" data-ed="type" data-g="${gi}" data-v="single">Pilih satu</button><button type="button" class="${g.type==="multi"?"on":""}" data-ed="type" data-g="${gi}" data-v="multi">Pilih banyak + kuantiti</button></div>
           ${g.type==="single"
-            ? `<label class="cfg-item">Wajib <button type="button" class="switch ${g.required?"on":""}" data-ed="req" data-g="${gi}" aria-label="Wajib"></button></label>`
+            ? `<label class="cfg-item">Wajib <button type="button" class="switch ${g.required?"on":""}" data-ed="req" data-g="${gi}" aria-label="Wajib" ${g.priceMode==="set"?"disabled":""}></button></label>
+               <label class="cfg-item" title="Harga pilihan menjadi harga item">Harga penuh <button type="button" class="switch ${g.priceMode==="set"?"on":""}" data-ed="pmode" data-g="${gi}" aria-label="Harga penuh"></button></label>
+               ${g.priceMode==="set"?`<p class="note pm-note">Harga setiap pilihan = <b>harga item</b> (cth. Regular RM5, Large RM6). Harga asas tidak digunakan, jadi tiada kira dua kali.</p>`:""}`
             : `<span class="cfg-item">Had jumlah ${sstep(`data-ed="gmax" data-g="${gi}"`,g.max||0,0,30,"Had jumlah")}</span>`}
         </div>
-        <div style="overflow-x:auto"><table class="otbl">
-          <thead><tr><th>Pilihan</th><th>+RM</th>${g.type==="multi"?'<th class="c">Maks / item</th>':""}<th class="c">Aktif</th><th></th></tr></thead>
+        <div style="overflow-x:auto"><table class="otbl ${g.priceMode==="set"?"pset":""}">
+          <thead><tr><th>Pilihan</th><th>${g.priceMode==="set"?"Harga RM":"+RM"}</th>${g.type==="multi"?'<th class="c">Maks / item</th>':""}<th class="c">Aktif</th><th></th></tr></thead>
           <tbody>${(g.options||[]).map((o,oi)=>`
             <tr class="${o.active===false?"off":""}">
               <td><input class="nm" data-of="name" data-g="${gi}" data-o="${oi}" value="${esc(o.name)}" placeholder="Nama pilihan" aria-label="Nama pilihan"></td>
@@ -1635,8 +1646,12 @@ $("#sheetBody").addEventListener("click",e=>{
   const d=b.dataset, g=d.g!==undefined?draft.groups[+d.g]:null, o=g&&d.o!==undefined?g.options[+d.o]:null, step=+(d.d||0);
   switch(d.ed){
     case "icon": draft.icon=d.v; break;
-    case "type": g.type=d.v; if(d.v==="multi"){ g.max=g.max||0; g.options.forEach(x=>x.max=x.max||1); delete g.required; } else { g.required=true; } break;
+    case "type": g.type=d.v; if(d.v==="multi"){ g.max=g.max||0; g.options.forEach(x=>x.max=x.max||1); delete g.required; delete g.priceMode; } else { g.required=true; } break;
     case "req": g.required=!g.required; break;
+    case "pmode":
+      if(g.priceMode==="set") delete g.priceMode;
+      else{ draft.groups.forEach(x=>{ if(x!==g) delete x.priceMode; }); g.priceMode="set"; g.required=true; }
+      break;
     case "gmax": g.max=Math.max(0,Math.min(30,(g.max||0)+step)); break;
     case "omax": o.max=Math.max(1,Math.min(20,(o.max||1)+step)); break;
     case "oact": o.active=o.active===false; break;
@@ -1662,6 +1677,12 @@ function saveProduct(){
     if(!g.name.trim()||!g.options.length){ toast("Setiap kumpulan perlu nama dan sekurang-kurangnya satu pilihan"); return; }
   }
   draft.name=draft.name.trim(); draft.price=+Number(draft.price).toFixed(2);
+  if(!draft.groups.some(g=>g.priceMode==="set") && draft.price>0){
+    const sus=draft.groups.find(g=>g.type==="single" && g.options.length && g.options.every(o=>(+o.price||0)>=draft.price) && Math.min(...g.options.map(o=>+o.price||0))===draft.price);
+    if(sus && confirm(`Harga dalam "${sus.name}" nampak macam harga penuh (${sus.options.map(o=>`${o.name} RM${(+o.price).toFixed(2)}`).join(", ")}), sama dengan harga asas RM${draft.price.toFixed(2)}.\n\nJadikan "${sus.name}" sebagai harga item supaya tidak dikira dua kali?`)){
+      draft.groups.forEach(x=>delete x.priceMode); sus.priceMode="set"; sus.required=true;
+    }
+  }
   loadMedia(); const img=draft._img; delete draft._img;
   if(img) IMAGES[draft.id]=img; else delete IMAGES[draft.id];
   if(JSON.stringify(IMAGES)!==JSON.stringify(read(ADMIN.keys.images,{})||{})) saveImages();
