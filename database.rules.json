@@ -12,28 +12,38 @@
       ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
     },
 
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['memberId', 'phone']) && newData.child('memberId').isString() && (!data.exists() || data.child('memberId').val() === newData.child('memberId').val()) && root.child('members').child(newData.child('memberId').val()).child('ownerUid').val() === auth.uid"
+      }
+    },
+
     "members": {
       ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
       "$memberId": {
-        ".read": "auth != null",
-        ".write": "auth != null",
-        ".validate": "$memberId.matches(/^[0-9]{12}$/)"
+        ".read": "auth != null && (data.child('ownerUid').val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('ownerUid').val() === auth.uid || (!data.child('ownerUid').exists() && newData.child('ownerUid').val() === auth.uid))",
+        ".validate": "$memberId.matches(/^[0-9]{12}$/) && (!data.child('ownerUid').exists() || newData.child('ownerUid').val() === data.child('ownerUid').val())"
       }
     },
 
     "orders": {
-      ".read": "auth != null && (root.child('admins').child(auth.uid).val() === true || (query.orderByChild === 'memberId' && query.equalTo != null))",
+      ".read": "auth != null && (root.child('admins').child(auth.uid).val() === true || (query.orderByChild === 'memberId' && query.equalTo === root.child('users').child(auth.uid).child('memberId').val()))",
       ".indexOn": ["memberId", "ts"],
       "$no": {
-        ".write": "auth != null",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (newData.child('memberId').val() === root.child('users').child(auth.uid).child('memberId').val() && (!data.exists() || data.child('memberId').val() === newData.child('memberId').val())))",
         ".validate": "newData.hasChildren(['no', 'ts', 'memberId', 'items', 'total', 'status'])"
       }
     },
 
     "vouchers": {
-      ".read": "auth != null && (root.child('admins').child(auth.uid).val() === true || (query.orderByChild === 'id' && query.equalTo != null))",
+      ".read": "auth != null && (root.child('admins').child(auth.uid).val() === true || (query.orderByChild === 'id' && query.equalTo === root.child('users').child(auth.uid).child('memberId').val()))",
       ".indexOn": ["id", "ts"],
-      "$code": { ".write": "auth != null" }
+      "$code": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (newData.child('id').val() === root.child('users').child(auth.uid).child('memberId').val() && (!data.exists() || data.child('id').val() === newData.child('id').val())))"
+      }
     },
 
     "counters": {

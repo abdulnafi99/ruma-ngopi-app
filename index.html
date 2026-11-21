@@ -204,6 +204,34 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .tag-mono{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2)}
 .demo-note{font-size:11px;color:var(--ink-3);text-align:center;margin:14px 0 0}
 
+/* ---------- Log masuk pelanggan (no telefon + kata laluan) ---------- */
+.gate{position:fixed;inset:0;z-index:90;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:calc(24px + var(--safe-t)) calc(16px + var(--safe-r)) calc(24px + var(--safe-b)) calc(16px + var(--safe-l));
+  background:radial-gradient(85% 60% at 50% 30%,#74503F 0%,var(--brand) 55%,#3E2A22 100%)}
+.gate[hidden]{display:none}
+.gate-top{text-align:center;color:#fff;margin-bottom:18px}
+.gate-top img{width:78px;height:78px;display:block;margin:0 auto 4px}
+.gate-top h1{margin:0;font-family:"Caveat","Segoe Script",cursive;font-weight:700;font-size:54px;line-height:1}
+.gate-top h1 span{color:#E6D3CA}
+.gate-top p{margin:6px 0 0;font-size:13px;color:rgba(255,255,255,.82)}
+.gate-card{width:100%;max-width:400px;background:rgba(252,248,246,.97);border-radius:28px;padding:20px 20px 18px;box-shadow:0 30px 60px -20px rgba(35,22,15,.6)}
+.gate-card .seg{margin-bottom:16px;box-shadow:none;background:rgba(92,62,51,.07);border-color:transparent}
+.gfield{display:block;margin-bottom:12px}
+.gfield span{display:block;font-size:12.5px;font-weight:700;color:var(--ink-2);margin:0 2px 6px}
+.gfield input{width:100%;font:inherit;font-size:16px;padding:13px 14px;border-radius:14px;border:1px solid rgba(92,62,51,.18);background:#fff;outline:none;color:var(--ink)}
+.gfield input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(92,62,51,.1)}
+.gfield[hidden]{display:none}
+.phone{display:flex;align-items:stretch;border-radius:14px;border:1px solid rgba(92,62,51,.18);background:#fff;overflow:hidden}
+.phone:focus-within{border-color:var(--brand);box-shadow:0 0 0 4px rgba(92,62,51,.1)}
+.phone b{display:grid;place-items:center;padding:0 12px;font-family:var(--mono);font-size:15px;color:var(--ink-2);background:rgba(92,62,51,.06);border-right:1px solid rgba(92,62,51,.12)}
+.phone input{border:0;border-radius:0;box-shadow:none!important;font-family:var(--mono);letter-spacing:.04em}
+.pw{position:relative}
+.pw input{padding-right:64px}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:var(--brand);padding:8px 10px;border-radius:10px}
+.gate-err{min-height:18px;margin:2px 2px 10px;font-size:12.5px;font-weight:600;color:#B3261E}
+.gate-err:empty{min-height:0;margin:0}
+.gate-note{margin:12px 0 0;text-align:center;font-size:12px;color:var(--ink-3)}
+
 /* ---------- Jalur status bar (notch / Dynamic Island) ---------- */
 .statusbar{position:fixed;top:0;left:0;right:0;height:var(--safe-t);z-index:39;pointer-events:none;
   background:linear-gradient(180deg,var(--brand-deep),var(--brand))}
@@ -624,6 +652,21 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 </div>
 
 <div class="scrim" id="scrim"></div>
+<div class="gate" id="authGate" hidden>
+  <div class="gate-top"><img class="wm" alt=""><h1>ruma<span>N</span>gopi</h1><p>Pesan kopi, kumpul cap &amp; point.</p></div>
+  <div class="gate-card">
+    <div class="seg" role="tablist"><button type="button" data-gtab="login" class="on" role="tab">Log masuk</button><button type="button" data-gtab="register" role="tab">Daftar</button></div>
+    <form id="gateForm" novalidate>
+      <label class="gfield" id="gNameF" hidden><span>Nama</span><input id="gName" autocomplete="name" maxlength="40" placeholder="Nama anda"></label>
+      <label class="gfield"><span>No telefon</span><div class="phone"><b>+60</b><input id="gPhone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="12 345 6789" maxlength="14"></div></label>
+      <label class="gfield"><span>Kata laluan</span><div class="pw"><input id="gPass" type="password" autocomplete="current-password" placeholder="Minimum 6 aksara"><button type="button" data-pwtoggle aria-label="Tunjuk kata laluan">Tunjuk</button></div></label>
+      <label class="gfield" id="gPass2F" hidden><span>Sahkan kata laluan</span><input id="gPass2" type="password" autocomplete="new-password" placeholder="Taip semula kata laluan"></label>
+      <p class="gate-err" id="gErr" role="alert"></p>
+      <button class="btn red block" id="gBtn" type="submit">Log masuk</button>
+    </form>
+    <p class="gate-note" id="gNote">Lupa kata laluan? Hubungi staf RumaNgopi di kaunter.</p>
+  </div>
+</div>
 <div class="statusbar" aria-hidden="true"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true">
   <div class="sheet-top"><button class="sheet-back" data-action="close" aria-label="Kembali"><svg class="i" data-ic="back"></svg></button><div class="grab"></div><span></span></div>
@@ -806,6 +849,7 @@ function load(){
 function save(){ try{ localStorage.setItem(CONFIG.storageKey, JSON.stringify(S)); }catch(e){} }
 
 const fmt = n => n.toLocaleString("en-US");
+const fmtPhone = p => { const d=String(p||"").replace(/^60/,""); return "+60 " + d.replace(/^(\d{2,3})(\d{3,4})(\d{4})$/,"$1-$2 $3"); };
 const fmtId = id => id.replace(/(\d{4})(?=\d)/g,"$1 ");
 const DAYS = ["Ahad","Isnin","Selasa","Rabu","Khamis","Jumaat","Sabtu"];
 const MON = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
@@ -882,7 +926,7 @@ function render(){
   // PROFIL
   $("#p-av").textContent = firstName()[0].toUpperCase();
   $("#p-name").textContent = S.name;
-  $("#p-id").textContent = fmtId(S.memberId);
+  $("#p-id").textContent = S.phone ? fmtPhone(S.phone) : fmtId(S.memberId);
   $("#p-tier").textContent = tier.name;
   $("#p-tier-bar").style.width = (tier.pct*100)+"%";
   $("#p-tier-txt").textContent = tier.next ? `${fmt(tier.need)} ke ${tier.next.name}` : "Tahap tertinggi";
@@ -1215,6 +1259,7 @@ async function placeOrder(){
   SHOP=SHOPX.load(); const st=shopState();
   if(!st.open){ toast(`Kedai ${st.label.toLowerCase()}`); openCart(); return; }
   if(LIVE && window.RN.status!=="live"){ toast("Tiada sambungan ke kedai. Semak internet dan cuba lagi."); return; }
+  if(LIVE && !window.RN.user){ closeSheet(); showGate("login"); return; }
   const opt=pickupOptions(st.sl).find(o=>o[0]===ckTime) || pickupOptions(st.sl)[0];
   const pickup={ label: opt[0]==="asap" ? "Secepat mungkin" : opt[1], at: opt[0]==="asap" ? null : +opt[0] };
   const pay = ckPay==="DuitNow" && SHOP.qr ? "DuitNow" : "Kaunter";
@@ -1289,8 +1334,9 @@ document.addEventListener("click", e=>{
   const a=e.target.closest("[data-action]"); if(!a) return;
   ({
     qr:showQR, close:closeSheet, shopInfo, claimStamp, demoBuy, editName, saveName, addLine, openCart, placeOrder,
-    logout:()=>confirmBox("Log keluar?","Data kad pada peranti ini akan dipadam.","doLogout","Log keluar"),
-    doLogout:()=>{ localStorage.removeItem(CONFIG.storageKey); load(); save(); closeSheet(); render(); go("home"); toast("Anda telah log keluar (data demo dimuat semula)"); },
+    logout:()=>confirmBox("Log keluar?", LIVE ? "Kad ahli anda kekal dalam akaun. Log masuk semula dengan no telefon dan kata laluan." : "Data kad pada peranti ini akan dipadam.","doLogout","Log keluar"),
+    doLogout:()=>{
+      if(LIVE){ closeSheet(); go("home"); window.RN.logoutUser().then(()=>toast("Anda telah log keluar")).catch(()=>toast("Gagal log keluar")); return; } localStorage.removeItem(CONFIG.storageKey); load(); save(); closeSheet(); render(); go("home"); toast("Anda telah log keluar (data demo dimuat semula)"); },
     reset:()=>confirmBox("Set semula data?","Semua point, cap dan sejarah akan kembali ke data demo.","doReset","Set semula"),
     doReset:()=>{ S=structuredClone(CONFIG.demoUser); save(); closeSheet(); render(); toast("Data demo dipulihkan"); },
   })[a.dataset.action]?.();
@@ -1299,6 +1345,68 @@ $("#scrim").addEventListener("click", ()=>closeSheet());
 document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeSheet(); });
 
 setInterval(()=>{ SHOP=SHOPX.load(); renderShopbar(); }, 60e3);
+
+/* =========================================================
+   LOG MASUK PELANGGAN — no telefon + kata laluan
+   (Firebase Auth Email/Password: <60xxxxxxxxx>@rumangopi.app)
+   ========================================================= */
+let gateTab = "login";
+const GATE_ERR = {
+  "app/invalid-phone":"No telefon tidak sah. Contoh: 012 345 6789",
+  "auth/invalid-credential":"No telefon atau kata laluan salah", "auth/wrong-password":"No telefon atau kata laluan salah",
+  "auth/user-not-found":"No telefon atau kata laluan salah", "auth/invalid-email":"No telefon tidak sah",
+  "auth/email-already-in-use":"No telefon ini sudah didaftar. Sila log masuk.", "auth/credential-already-in-use":"No telefon ini sudah didaftar. Sila log masuk.",
+  "auth/weak-password":"Kata laluan minimum 6 aksara", "auth/too-many-requests":"Terlalu banyak cubaan. Cuba lagi sebentar.",
+  "auth/network-request-failed":"Tiada sambungan internet", "auth/operation-not-allowed":"Log masuk belum dihidupkan oleh kedai",
+  "PERMISSION_DENIED":"Kedai belum benarkan pendaftaran. Sila maklumkan kepada staf.",
+};
+function showGate(tab){
+  if(tab) setGateTab(tab);
+  $("#authGate").hidden=false;
+  setTimeout(()=>{ if(!$("#authGate").hidden && !$("#splash")) $(gateTab==="register"?"#gName":"#gPhone").focus(); }, 350);
+}
+function setGateTab(t){
+  gateTab=t;
+  $$("[data-gtab]").forEach(b=>b.classList.toggle("on",b.dataset.gtab===t));
+  $("#gNameF").hidden = $("#gPass2F").hidden = t!=="register";
+  $("#gPass").autocomplete = t==="register" ? "new-password" : "current-password";
+  $("#gBtn").textContent = t==="register" ? "Daftar akaun" : "Log masuk";
+  $("#gNote").textContent = t==="register" ? "Kad ahli dalam telefon ini akan disimpan dalam akaun baru anda." : "Lupa kata laluan? Hubungi staf RumaNgopi di kaunter.";
+  $("#gErr").textContent="";
+}
+document.addEventListener("click", e=>{
+  const t=e.target.closest("[data-gtab]"); if(t){ setGateTab(t.dataset.gtab); return; }
+  const pw=e.target.closest("[data-pwtoggle]"); if(pw){ const i=$("#gPass"), show=i.type==="password"; i.type=$("#gPass2").type=show?"text":"password"; pw.textContent=show?"Sorok":"Tunjuk"; }
+});
+$("#gateForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const RN=window.RN, err=$("#gErr"), btn=$("#gBtn");
+  const phone=$("#gPhone").value, pass=$("#gPass").value, name=$("#gName").value.trim();
+  err.textContent="";
+  if(!RN.login){ err.textContent="Sedang menyambung ke kedai… cuba sebentar lagi."; return; }
+  if(!RN.normPhone(phone)){ err.textContent=GATE_ERR["app/invalid-phone"]; return; }
+  if(pass.length<6){ err.textContent=GATE_ERR["auth/weak-password"]; return; }
+  if(gateTab==="register"){
+    if(!name){ err.textContent="Sila masukkan nama"; return; }
+    if(pass!==$("#gPass2").value){ err.textContent="Kata laluan tidak sama"; return; }
+  }
+  btn.disabled=true; btn.textContent = gateTab==="register" ? "Mendaftar…" : "Log masuk…";
+  try{
+    if(gateTab==="register"){ await RN.register(phone, pass, name); toast(`Selamat datang, ${name.split(/\s+/)[0]}!`); }
+    else { await RN.login(phone, pass); toast("Log masuk berjaya"); }
+    $("#gPass").value=$("#gPass2").value="";
+  }catch(ex){
+    const code=ex?.code||String(ex);
+    err.textContent = GATE_ERR[code] || (/PERMISSION_DENIED|permission/i.test(code) ? GATE_ERR.PERMISSION_DENIED : "Gagal. Cuba lagi.");
+  }finally{ btn.disabled=false; btn.textContent = gateTab==="register" ? "Daftar akaun" : "Log masuk"; }
+});
+if(LIVE){
+  window.RN.on("auth", user=>{
+    const g=$("#authGate");
+    if(user){ g.hidden=true; $("#gErr").textContent=""; }
+    else { closeSheet(); showGate(); }
+  });
+}
 
 /* Status rangkaian */
 function net(){
@@ -1311,7 +1419,7 @@ if(LIVE){
   window.RN.on("status", ()=>net());
   window.RN.on("error", e=>toast(/PERMISSION_DENIED|permission/i.test(e.code) ? "Kedai belum benarkan sambungan. Sila maklumkan kepada staf." : `${e.what} gagal. Cuba lagi.`));
   $("#demoTile").style.display="none";
-  $("#logoutRow").style.display="none";
+
   $("#demoNote").textContent="Kad ahli anda disimpan dalam peranti ini dan disegerak dengan RumaNgopi.";
 }
 addEventListener("online",net); addEventListener("offline",net);
@@ -1319,9 +1427,9 @@ addEventListener("online",net); addEventListener("offline",net);
 /* Segerak langsung bila admin.html (tab lain) ubah data */
 addEventListener("storage", e=>{
   if(e.key===CONFIG.storageKey || e.key===SHARED.rewards || e.key===SHARED.settings){
-    const before=S?S.stamps+"/"+S.points:"";
+    const beforeId=S?.memberId, before=S?S.stamps+"/"+S.points:"";
     applyShared(); load(); render();
-    if(e.key===CONFIG.storageKey && before!==S.stamps+"/"+S.points) toast("Kad anda dikemas kini di kaunter");
+    if(e.key===CONFIG.storageKey && beforeId===S.memberId && e.oldValue && before!==S.stamps+"/"+S.points) toast("Kad anda dikemas kini di kaunter");
   }
   if(e.key===SHOPX.KEY){ SHOP=SHOPX.load(); renderShopbar(); }
   if(e.key===SHARED.menu){ applyShared(); if($("#s-menu").classList.contains("active")) renderMenu(); }
@@ -1371,7 +1479,7 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 function endSplash(){
   const sp=$("#splash"); if(!sp||sp.classList.contains("out")) return;
   sp.classList.add("out"); $("#app").classList.add("enter");
-  if(LIVE && !S.name) setTimeout(()=>{ if(!S.name && !$("#sheet").classList.contains("show")) editName(); }, 700);
+  if(LIVE && window.RN.user && !S.name) setTimeout(()=>{ if(!S.name && !$("#sheet").classList.contains("show")) editName(); }, 700);
   setTimeout(()=>{ sp.remove(); $("#app").classList.remove("enter"); }, 900);
 }
 
