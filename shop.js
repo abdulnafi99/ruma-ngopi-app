@@ -13,6 +13,7 @@
     slot: 15,                       // selang slot pickup (minit)
     prep: 15,                       // masa sediakan minimum (minit)
     paused: false,                  // tutup sementara: tak terima pesanan
+    whatsapp: "601112328504",       // no WhatsApp sokongan (format 60xxxxxxxxx), kosong = sembunyi butang
     hours: Array.from({length:7}, () => ({ open:true, from:"10:00", to:"22:00" })), // index ikut getDay() (0 = Ahad)
   };
   const clone = o => JSON.parse(JSON.stringify(o));
@@ -58,6 +59,23 @@
     }
     return null;
   }
+  /* Pra-pesanan: bila tiada slot lagi hari ini, buka slot untuk hari buka seterusnya (maks 7 hari) */
+  function preorder(c, now = new Date()){
+    if(c.paused || slots(c, now).open) return null;
+    const step = Math.max(5, +c.slot || 15);
+    for(let i = 1; i <= 7; i++){
+      const d = new Date(now); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + i);
+      const w = dayWindow(c, d); if(!w) continue;
+      const list = []; for(let m = Math.ceil(w.f / step) * step; m <= w.t; m += step) list.push(m);
+      if(!list.length) continue;
+      const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+      return { date, day: i === 1 ? "esok" : `${DAYS[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`, list, window: w };
+    }
+    return null;
+  }
+  /* No WhatsApp → pautan wa.me */
+  const waNumber = c => { let d = String(c.whatsapp || "").replace(/\D/g, ""); if(d.startsWith("0")) d = "6" + d; return d.length >= 10 ? d : ""; };
+  const waLink = (c, text) => { const n = waNumber(c); return n ? `https://wa.me/${n}${text ? "?text=" + encodeURIComponent(text) : ""}` : ""; };
   const todayLabel = (c, now = new Date()) => { const w = dayWindow(c, now); return w ? `${fmt12(w.f)} – ${fmt12(w.t)}` : "Tutup hari ini"; };
-  window.RUMANGOPI_SHOP = { KEY, DAYS, DEF, load, save, slots, nextOpen, dayWindow, todayLabel, fmt12, toMin };
+  window.RUMANGOPI_SHOP = { KEY, DAYS, DEF, load, save, slots, preorder, nextOpen, dayWindow, todayLabel, fmt12, toMin, waNumber, waLink };
 })();
