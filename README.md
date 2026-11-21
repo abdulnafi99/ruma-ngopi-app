@@ -102,7 +102,7 @@ App disambung ke projek Firebase **rumangopi-app** (`firebase-config.js`). Semua
 1. **Authentication → Sign-in method**: hidupkan **Email/Password** (Anonymous tidak diperlukan lagi).
 2. **Authentication → Users → Add user**: cipta akaun admin (emel + kata laluan).
 3. **Realtime Database → Rules**: salin isi `database.rules.json`, kemudian **Publish** (ulang setiap kali fail ini berubah).
-4. Log masuk ke `/admin`, salin **UID admin** dari Tetapan, kemudian di **Realtime Database → Data** tambah `admins` → `<UID>` = `true`.
+4. UID admin utama (`cqFIzYAssCX2HIcbdHFMyvbF0q33`) sudah ditulis terus dalam `database.rules.json`. Untuk admin tambahan, di **Realtime Database → Data** tambah `admins` → `<UID>` = `true`.
 5. **Authentication → Settings → Authorized domains**: pastikan domain Vercel (`ruma-ngopi-app.vercel.app`) ada.
 
 > Nota keselamatan: point & cap dikira dalam app (bukan server), jadi pelanggan yang mahir teknikal boleh ubah kad sendiri. Untuk perlindungan penuh, pindahkan pengiraan point ke Cloud Functions.
