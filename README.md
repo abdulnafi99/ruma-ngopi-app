@@ -76,7 +76,8 @@ App disambung ke projek Firebase **rumangopi-app** (`firebase-config.js`). Semua
 | Path | Isi | Siapa tulis |
 |---|---|---|
 | `store/menu`, `store/rewards`, `store/settings`, `store/shop` | menu, ganjaran, tetapan cap/point, alamat, QR DuitNow, waktu pickup | admin |
-| `members/{memberId}` | kad ahli (nama, point, cap, sejarah) | pelanggan & kaunter |
+| `users/{uid}` | akaun pelanggan → `memberId`, no telefon, nama | pelanggan (sendiri) |
+| `members/{memberId}` | kad ahli (nama, telefon, point, cap, sejarah, `ownerUid`) | pemilik kad & kaunter |
 | `orders/{no}` | pesanan pickup | pelanggan (cipta), admin (status) |
 | `vouchers/{code}` | baucar ganjaran | pelanggan (cipta), admin (sahkan) |
 | `counters/orderNo` | nombor pesanan seterusnya (A101, A102…) | automatik |
@@ -84,16 +85,23 @@ App disambung ke projek Firebase **rumangopi-app** (`firebase-config.js`). Semua
 
 **Cara ia berfungsi:** app masih guna `localStorage`. `firebase-config.js` memintas tulisan pada kunci yang dikongsi dan hantar ke Firebase (`firebase-sync.js`). Data dari Firebase ditulis semula ke `localStorage` dan app dimaklumkan melalui event `storage`.
 
+**Log masuk pelanggan (no telefon + kata laluan):**
+- Selepas splash, pelanggan **Log masuk** atau **Daftar** (nama, no telefon, kata laluan minimum 6 aksara).
+- Di Firebase Auth ia disimpan sebagai **Email/Password** dengan emel `60xxxxxxxxx@rumangopi.app` (no telefon dinormalkan: `012-345 6789`, `+60123456789` → `60123456789`).
+- Kad ahli terikat pada akaun: log masuk di telefon lain = kad, point & pesanan yang sama. Kad lama dalam telefon (sebelum ada akaun) disimpan ke akaun semasa daftar.
+- Kaunter admin boleh cari ahli guna **no telefon** atau ID ahli.
+- Lupa kata laluan: belum ada reset sendiri (emel `@rumangopi.app` bukan emel sebenar). Pemilik boleh padam akaun di Firebase Console → Authentication supaya pelanggan daftar semula.
+
 **Mod live berbanding demo:**
-- Setiap telefon dapat kad ahli baru (ID 12 digit) dan diminta nama. Butang demo (simulasi pembelian, set semula, log keluar) disembunyikan.
+- Butang demo (simulasi pembelian, set semula) disembunyikan.
 - Admin log masuk dengan **emel & kata laluan Firebase** (bukan PIN).
 - Tiada sambungan internet: pelanggan masih boleh lihat kad & menu, tetapi tidak boleh buat pesanan.
 - Untuk kembali ke mod demo, buang `<script src="firebase-config.js">` dari `index.html` dan `admin.html`.
 
 ### Setup di Firebase Console (sekali sahaja)
-1. **Authentication → Sign-in method**: hidupkan **Anonymous** dan **Email/Password**.
+1. **Authentication → Sign-in method**: hidupkan **Email/Password** (Anonymous tidak diperlukan lagi).
 2. **Authentication → Users → Add user**: cipta akaun admin (emel + kata laluan).
-3. **Realtime Database → Rules**: salin isi `database.rules.json`, kemudian **Publish**.
+3. **Realtime Database → Rules**: salin isi `database.rules.json`, kemudian **Publish** (ulang setiap kali fail ini berubah).
 4. Log masuk ke `/admin`, salin **UID admin** dari Tetapan, kemudian di **Realtime Database → Data** tambah `admins` → `<UID>` = `true`.
 5. **Authentication → Settings → Authorized domains**: pastikan domain Vercel (`ruma-ngopi-app.vercel.app`) ada.
 

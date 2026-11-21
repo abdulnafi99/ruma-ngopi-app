@@ -410,7 +410,7 @@ label.btn{cursor:pointer}
             <h3>Cari ahli</h3>
             <div class="scan-box" id="scanBox" hidden><video id="video" playsinline muted></video><div class="frame"></div><div class="laser"></div></div>
             <div class="row" style="margin-bottom:10px">
-              <input class="input mono grow" id="memberIn" placeholder="ID ahli / imbas QR" inputmode="numeric">
+              <input class="input mono grow" id="memberIn" placeholder="ID ahli / no telefon / imbas QR" inputmode="numeric">
               <button class="btn" data-action="findMember">Cari</button>
             </div>
             <button class="btn ghost block" id="scanBtn" data-action="scan"><svg class="i" data-ic="camera"></svg>Imbas QR dengan kamera</button>
@@ -718,7 +718,7 @@ function liveDB(map){
   Object.values(map||{}).forEach(m=>{
     if(!m||!m.memberId) return;
     const hist=Array.isArray(m.history)?m.history:[];
-    members.push({id:m.memberId,name:m.name||"Ahli",points:+m.points||0,lifetime:+m.lifetime||0,stamps:+m.stamps||0,redeemed:+m.redeemed||0,
+    members.push({id:m.memberId,name:m.name||"Ahli",phone:m.phone||"",points:+m.points||0,lifetime:+m.lifetime||0,stamps:+m.stamps||0,redeemed:+m.redeemed||0,
       last:hist.reduce((a,h)=>Math.max(a,h.ts||0),0),joined:m.joined||m.updatedAt||Date.now()});
     hist.forEach(h=>tx.push({ts:h.ts,id:m.memberId,k:h.p>0?"buy":(h.p<0||/kad cap|percuma/i.test(h.t))?"redeem":"adjust",t:h.t,p:h.p,n:h.n||(h.p>0?Math.max(1,Math.round(h.p/SETTINGS.pointsPerPurchase)):0)}));
   });
@@ -876,9 +876,11 @@ let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>current
    KAUNTER
    ========================================================= */
 let counterId=null, qty=1;
+const phoneKey=v=>{ let d=String(v||"").replace(/\D/g,""); if(d.startsWith("60")) d=d.slice(2); if(d.startsWith("0")) d=d.slice(1); return d.length>=9?"60"+d:""; };
 function findMember(raw){
-  const id=cleanId(raw??$("#memberIn").value);
-  if(!id){toast("Masukkan ID ahli");return;}
+  let id=cleanId(raw??$("#memberIn").value);
+  if(!id){toast("Masukkan ID ahli atau no telefon");return;}
+  if(!getMember(id)){ const pk=phoneKey(raw??$("#memberIn").value), hit=pk&&allMembers().find(x=>x.phone===pk); if(hit) id=hit.id; }   // cari ikut no telefon
   const m=getMember(id);
   if(!m){toast("Ahli tidak dijumpai");$("#memberIn").classList.add("shake");setTimeout(()=>$("#memberIn").classList.remove("shake"),400);return;}
   counterId=id; qty=1; $("#memberIn").value=fmtId(id); renderCounterMember();
@@ -981,7 +983,7 @@ let sortKey="last", sortDir=-1;
 function renderMembers(){
   const q=$("#q").value.trim().toLowerCase(), tf=$("#tierFilter").value, T=SETTINGS.stampTarget;
   let list=allMembers().map(m=>({...m,tier:tierOf(m.lifetime)}));
-  if(q) list=list.filter(m=>m.name.toLowerCase().includes(q)||m.id.includes(q.replace(/\s/g,"")));
+  if(q){ const dq=q.replace(/\D/g,""), pk=phoneKey(q); list=list.filter(m=>m.name.toLowerCase().includes(q)||(dq&&m.id.includes(dq))||(pk&&(m.phone||"").includes(pk))); }
   if(tf) list=list.filter(m=>m.tier===tf);
   list.sort((a,b)=>{const x=a[sortKey],y=b[sortKey];return (typeof x==="string"?x.localeCompare(y):x-y)*sortDir;});
   $("#memCount").textContent=`${list.length} ahli`;
@@ -999,7 +1001,7 @@ function openMember(id){
   const m=getMember(id); if(!m) return;
   const tx=allTx().filter(x=>x.id===id).slice(0,15), T=SETTINGS.stampTarget;
   openSheet(`
-    <div class="member-card" style="margin-top:6px"><div class="av lg">${esc(m.name[0])}</div><div class="n"><b>${esc(m.name)}</b><span class="mono" style="color:var(--ink-2)">${fmtId(m.id)}</span></div></div>
+    <div class="member-card" style="margin-top:6px"><div class="av lg">${esc(m.name[0])}</div><div class="n"><b>${esc(m.name)}</b><span class="mono" style="color:var(--ink-2)">${fmtId(m.id)}${m.phone?` · +${esc(m.phone)}`:""}</span></div></div>
     <div class="grid g2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
       <div class="tile dark" style="padding:14px"><div class="label">Point</div><div class="kpi" style="font-size:24px;margin-top:8px">${fmt(m.points)}</div></div>
       <div class="tile" style="padding:14px"><div class="label">Tahap</div><div style="margin-top:10px"><span class="tier ${tierOf(m.lifetime)}">${tierOf(m.lifetime)}</span></div><div class="note" style="margin-top:6px">${fmt(m.lifetime)} terkumpul</div></div>
