@@ -400,6 +400,17 @@ a.row[hidden]{display:none}
 .ck-info svg{width:17px;height:17px;flex:none;margin-top:1px}
 .wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:16px;background:#1F9D55;color:#fff;font-weight:700;font-size:14px;text-decoration:none}
 .wa-link{color:var(--brand);font-weight:700;text-decoration:none}
+.proof{margin-top:10px;border-radius:16px;background:#fff;border:1px solid rgba(92,62,51,.1);padding:12px}
+.proof .qr-pay{margin:4px auto 10px;width:min(56vw,200px)}
+.proof p{margin:0 0 10px!important;font-size:12.5px!important;text-align:center}
+.proof-up{display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:1.5px dashed rgba(92,62,51,.3);cursor:pointer;font-size:13px;font-weight:700;color:var(--brand)}
+.proof-up.has{border-style:solid;border-color:var(--ok);color:var(--ok)}
+.proof-up img{width:54px;height:54px;object-fit:cover;border-radius:10px;flex:none}
+.proof-up .ph{width:54px;height:54px;border-radius:10px;display:grid;place-items:center;background:rgba(92,62,51,.07);flex:none}
+.proof-up small{display:block;font-weight:500;color:var(--ink-2);font-size:11.5px}
+.status-chip.rej{background:rgba(179,38,30,.1);color:#B3261E}
+.rej-box{border-radius:14px;background:rgba(179,38,30,.07);color:#8C1D18;font-size:13px;line-height:1.5;padding:12px 14px;margin:14px 0 4px;text-align:left}
+.wait-box{border-radius:14px;background:rgba(92,62,51,.07);color:var(--brand-deep);font-size:12.5px;line-height:1.5;padding:10px 14px;margin:14px 0 0;text-align:left}
 .ck-warn{border-radius:14px;background:#FFF2DD;color:#9A5A00;font-size:13px;font-weight:600;padding:12px 14px;line-height:1.45}
 .pay{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pay label{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:16px;background:#fff;border:1.5px solid rgba(92,62,51,.1);cursor:pointer;font-size:13.5px;font-weight:700}
@@ -1131,17 +1142,17 @@ function setOrderTab(t){
   if(t==="menu") renderMenu(); else renderOrders();
 }
 function renderOrders(){
-  const list=myOrders(), act=list.filter(o=>o.status!=="Selesai"), past=list.filter(o=>o.status==="Selesai");
+  const list=myOrders(), act=list.filter(o=>!isClosed(o)), past=list.filter(isClosed);
   $("#o-badge").textContent = act.length || "";
   $("#navDot").hidden = !act.length;
   const box=$("#o-mine"); if(!box || box.hidden) return;
-  const card = o => { const idx=Math.max(0,ORDER_STEPS.indexOf(o.status)), done=o.status==="Selesai";
+  const card = o => { const idx=Math.max(0,ORDER_STEPS.indexOf(o.status)), done=isClosed(o), rej=o.status==="Ditolak";
     return `<button class="tile ocard" data-order="${esc(o.no)}">
-      <div class="top"><span class="no">#${esc(o.no)}</span><span class="status-chip ${o.status==="Siap diambil"||done?"ready":""}">${esc(o.status)}</span></div>
+      <div class="top"><span class="no">#${esc(o.no)}</span><span class="status-chip ${rej?"rej":o.status==="Siap diambil"||o.status==="Selesai"?"ready":""}">${esc(stTxt(o.status))}</span></div>
       <div class="meta">${dShort(o.ts)} · ${hhmm(o.ts)} · ${o.items.length} item · <b class="mono">${rm2(o.total)}</b></div>
       <div class="meta">${o.pickup?.pre?"Pra-pesanan · pickup":"Pickup"}: <b>${esc(o.pickup?.label||"Secepat mungkin")}</b>${o.pay==="DuitNow"?" · DuitNow QR":""}</div>
       <div class="items">${esc(o.items.map(i=>i.name).join(", "))}</div>
-      ${done?"":`<div class="steps">${ORDER_STEPS.map((s,i)=>`<i class="${i<=idx?"on":""}"></i>`).join("")}</div><div class="steps-l">${ORDER_STEPS.map(s=>`<span>${s}</span>`).join("")}</div>`}
+      ${done?(rej&&o.rejectReason?`<div class="meta" style="color:#B3261E">Sebab: ${esc(o.rejectReason)}</div>`:""):`<div class="steps">${ORDER_STEPS.map((s,i)=>`<i class="${i<=idx?"on":""}"></i>`).join("")}</div><div class="steps-l">${STEP_TXT.map(s=>`<span>${s}</span>`).join("")}</div>`}
     </button>`; };
   box.innerHTML = (act.length ? `<div class="section-t" style="margin-top:4px"><span>Pesanan aktif</span><span>${act.length}</span></div>${act.map(card).join("")}` : `
       <div class="tile o-empty"><div class="icon-sq">${icon("cup")}</div><div class="title">Tiada pesanan aktif</div><p>Pesan kopi kegemaran anda dan ambil di kaunter. Setiap item = 1 cap.</p><button class="btn red" data-otab="menu">Lihat menu</button></div>`)
@@ -1231,7 +1242,27 @@ function renderCartBar(){
    PICKUP SAHAJA — alamat, waktu pickup & bayaran (dari shop.js / admin)
    ========================================================= */
 const SHOPX = window.RUMANGOPI_SHOP;
-let SHOP = SHOPX.load(), ckTime = "asap", ckPay = "Kaunter";
+let SHOP = SHOPX.load(), ckTime = "asap", ckPay = "Kaunter", ckProof = null;
+/* Gambar bukti bayaran: kecilkan (maks 1100px, JPEG) supaya muat dalam database */
+function shrinkProof(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{ const k=Math.min(1,1100/Math.max(img.width,img.height)), w=Math.round(img.width*k), h=Math.round(img.height*k);
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h; const x=cv.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,w,h); x.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url); let q=.72, d=cv.toDataURL("image/jpeg",q); while(d.length>600000 && q>.35){ q-=.12; d=cv.toDataURL("image/jpeg",q); } res(d); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("bad")); };
+    img.src=url;
+  });
+}
+async function pickProof(file){
+  if(!file) return;
+  if(!/^image\//.test(file.type)){ toast("Sila pilih gambar screenshot resit"); return; }
+  try{ ckProof=await shrinkProof(file); openCart(); toast("Bukti bayaran dimuat naik"); }catch(e){ toast("Gambar tidak dapat dibaca"); }
+}
+async function saveProof(no, img){
+  if(LIVE) return window.RN.saveProof(no, img, S.memberId);
+  try{ const m=JSON.parse(localStorage.getItem("rumangopi-proofs-v1")||"{}"); m[no]=img; localStorage.setItem("rumangopi-proofs-v1",JSON.stringify(m)); }catch(e){}
+}
 const shopAddr = () => SHOP.address || `Kaunter ${CONFIG.brand}`;
 function shopState(){
   const sl=SHOPX.slots(SHOP), nx=SHOPX.nextOpen(SHOP), pre=SHOPX.preorder(SHOP);
@@ -1276,7 +1307,7 @@ function openCart(){
     <h2>Troli anda</h2><p>Pickup sahaja: ambil sendiri di kaunter ${esc(CONFIG.brand)}.</p>
     <div>${cart.map((c,i)=>`<div class="cart-line"><span class="q">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"Tiada pilihan tambahan")}</span></div><span class="pr">${rm2(c.price)}</span><button class="rm" data-rmline="${i}" aria-label="Buang ${esc(c.name)}">${icon("trash","width:17px;height:17px")}</button></div>`).join("")}</div>
     <div class="sum total"><span>Jumlah</span><span class="mono">${rm2(cartTotal())}</span></div>
-    <div class="earn">${icon("gift","width:18px;height:18px")}Pesanan ini beri +${Math.min(n,CONFIG.stampTarget-S.stamps)||0} cap &amp; +${fmt(n*P)} point</div>
+    <div class="earn">${icon("gift","width:18px;height:18px")}Bila diterima: +${Math.min(n,CONFIG.stampTarget-S.stamps)||0} cap &amp; +${fmt(n*P)} point</div>
     ${checkoutHTML()}
     <div class="btn-row"><button class="btn ghost" data-action="close" data-go="menu">Tambah lagi</button><button class="btn red" data-action="placeOrder" ${shopState().open?"":"disabled"}>${shopState().pre?"Pra-pesan":"Buat pesanan"}</button></div>`);
 }
@@ -1295,11 +1326,19 @@ function checkoutHTML(){
       <div class="pay">
         <label><input type="radio" name="ckPay" value="Kaunter" ${ckPay==="Kaunter"?"checked":""}>Bayar di kaunter<small>Tunai / kad semasa ambil</small></label>
         ${SHOP.qr?`<label><input type="radio" name="ckPay" value="DuitNow" ${ckPay==="DuitNow"?"checked":""}>DuitNow QR<small>Imbas &amp; bayar sekarang</small></label>`:""}
-      </div></div>`;
+      </div>
+      ${ckPay==="DuitNow"&&SHOP.qr?`<div class="proof">
+        <div class="qr-pay"><img src="${SHOP.qr}" alt="DuitNow QR"></div>
+        <p>1. Imbas QR &amp; bayar <b class="mono">${rm2(cartTotal())}</b>${SHOP.qrName?` kepada <b>${esc(SHOP.qrName)}</b>`:""}<br>2. Muat naik screenshot resit bayaran</p>
+        <label class="proof-up ${ckProof?"has":""}">${ckProof?`<img src="${ckProof}" alt="Bukti bayaran">`:`<span class="ph">${icon("download","width:20px;height:20px")}</span>`}
+          <span>${ckProof?"Bukti bayaran dimuat naik ✓":"Muat naik bukti bayaran"}<small>${ckProof?"Tekan untuk tukar gambar":"Screenshot resit DuitNow (wajib)"}</small></span>
+          <input type="file" accept="image/*" id="proofFile" hidden></label>
+      </div>`:""}</div>`;
 }
 $("#sheetBody").addEventListener("change", e=>{
   if(e.target.id==="ckTime") ckTime=e.target.value;
-  if(e.target.name==="ckPay") ckPay=e.target.value;
+  if(e.target.name==="ckPay"){ ckPay=e.target.value; openCart(); }
+  if(e.target.id==="proofFile") pickProof(e.target.files[0]);
 });
 let placing = false;
 async function placeOrder(){
@@ -1313,42 +1352,51 @@ async function placeOrder(){
   const pickup = opt[0]==="asap" ? { label:"Secepat mungkin", at:null }
     : pDate ? { label:opt[1], at:+pMin, date:pDate, pre:true } : { label:opt[1], at:+pMin };
   const pay = ckPay==="DuitNow" && SHOP.qr ? "DuitNow" : "Kaunter";
+  if(pay==="DuitNow" && !ckProof){ toast("Sila muat naik bukti bayaran DuitNow dahulu"); document.querySelector(".proof-up")?.scrollIntoView({behavior:"smooth",block:"center"}); return; }
   const n=cart.length, P=CONFIG.pointsPerPurchase, total=+cartTotal().toFixed(2);
   let orders=[]; try{ orders=JSON.parse(localStorage.getItem(SHARED.orders)||"[]"); }catch(e){}
   placing = true; $$('[data-action="placeOrder"]').forEach(b=>{ b.disabled=true; b.textContent="Menghantar…"; });
   let no;
   try{ no = window.RN?.nextOrderNo ? await window.RN.nextOrderNo() : "A"+String(100+orders.length+1).slice(-3); }
   finally{ placing = false; }
+  if(pay==="DuitNow"){
+    try{ await saveProof(no, ckProof); }
+    catch(e){ toast("Gagal hantar bukti bayaran. Semak internet dan cuba lagi."); openCart(); return; }
+  }
   try{ orders=JSON.parse(localStorage.getItem(SHARED.orders)||"[]"); }catch(e){ orders=[]; }
-  const order={no,ts:Date.now(),memberId:S.memberId,name:S.name||"Ahli",items:cart.map(c=>({name:c.name,opts:c.opts,price:c.price})),total,status:"Baru",pickup,pay};
+  const order={no,ts:Date.now(),memberId:S.memberId,name:S.name||"Ahli",phone:S.phone||"",items:cart.map(c=>({name:c.name,opts:c.opts,price:c.price})),total,status:"Baru",pickup,pay,proof:pay==="DuitNow"};
   orders.unshift(order); try{ localStorage.setItem(SHARED.orders,JSON.stringify(orders.slice(0,200))); }catch(e){}
   knownStatus[no]="Baru";
-  S.points+=n*P; S.lifetime+=n*P; S.stamps=Math.min(CONFIG.stampTarget,S.stamps+n);
-  S.history.unshift({ts:Date.now(),t:`Pesanan #${no} (${n} item)`,p:n*P,n});
-  save(); cart=[]; saveCart(); render(); renderCartBar(); confetti();
+  void n; void P;   // cap & point diberi oleh kedai bila pesanan diterima
+  ckProof=null; cart=[]; saveCart(); render(); renderCartBar(); confetti();
   if($("#s-menu").classList.contains("active")) setOrderTab("mine"); else { orderTab="mine"; renderOrders(); }
   showOrder(no);
   if(LIVE) window.RN.notify("order.new", { no });
 }
 const ORDER_STEPS=["Baru","Disediakan","Siap diambil"];
+const STEP_TXT=["Menunggu","Disediakan","Siap diambil"];
+const STATUS_TXT={ "Baru":"Menunggu pengesahan", "Disediakan":"Diterima · disediakan", "Siap diambil":"Siap diambil", "Selesai":"Selesai", "Ditolak":"Ditolak" };
+const stTxt = s => STATUS_TXT[s] || s;
+const isClosed = o => o.status==="Selesai" || o.status==="Ditolak";
 function showOrder(no){
   let o; try{ o=JSON.parse(localStorage.getItem(SHARED.orders)||"[]").find(x=>x.no===no); }catch(e){}
   if(!o) return;
-  const idx=Math.max(0,ORDER_STEPS.indexOf(o.status)), done=o.status==="Selesai";
+  const idx=Math.max(0,ORDER_STEPS.indexOf(o.status)), done=isClosed(o), rej=o.status==="Ditolak";
   openSheet(`<div class="center" id="orderView" data-no="${o.no}">
-    <div class="icon-sq" style="margin:4px auto 12px;background:var(--brand)">${icon("bag")}</div>
+    <div class="icon-sq" style="margin:4px auto 12px;background:${rej?"#B3261E":"var(--brand)"}">${icon(rej?"x":"bag")}</div>
     <h2>Pesanan #${esc(o.no)}</h2>
     <p>${o.items.length} item · <b class="mono">${rm2(o.total)}</b></p>
-    <span class="status-chip ${o.status==="Siap diambil"||done?"ready":""}">${esc(o.status)}</span>
-    <div class="steps">${ORDER_STEPS.map((s,i)=>`<i class="${i<=idx||done?"on":""}"></i>`).join("")}</div>
-    <div class="steps-l">${ORDER_STEPS.map(s=>`<span>${s}</span>`).join("")}</div>
+    <span class="status-chip ${rej?"rej":o.status==="Siap diambil"||o.status==="Selesai"?"ready":""}">${esc(stTxt(o.status))}</span>
+    ${rej ? `<div class="rej-box"><b>Pesanan ditolak oleh kedai.</b>${o.rejectReason?`<br>Sebab: ${esc(o.rejectReason)}`:""}${o.pay==="DuitNow"?`<br>Bayaran DuitNow anda akan dipulangkan. Hubungi kedai jika ada pertanyaan.`:""}</div>`
+      : `<div class="steps">${ORDER_STEPS.map((s,i)=>`<i class="${i<=idx||done?"on":""}"></i>`).join("")}</div>
+    <div class="steps-l">${STEP_TXT.map(s=>`<span>${s}</span>`).join("")}</div>
+    ${o.status==="Baru"?`<div class="wait-box">Menunggu kedai terima pesanan anda. Cap &amp; point diberi bila pesanan diterima.</div>`:""}`}
     <div class="o-info">
       <div>${icon("clock")}<span>${o.pickup?.pre?"Pra-pesanan · pickup":"Pickup"}: <b>${esc(o.pickup?.label||"Secepat mungkin")}</b></span></div>
       <div>${icon("pin")}<span>${esc(shopAddr())}</span></div>
       <div>${icon("wallet")}<span>${o.pay==="DuitNow"?"DuitNow QR":"Bayar di kaunter semasa ambil"}</span></div>
     </div>
-    ${o.pay==="DuitNow"&&!done&&SHOP.qr?`<div class="qr-pay"><img src="${SHOP.qr}" alt="DuitNow QR"></div>
-      <p style="margin:6px 0 0">Imbas &amp; bayar <b class="mono">${rm2(o.total)}</b>${SHOP.qrName?` kepada <b>${esc(SHOP.qrName)}</b>`:""}. Tunjuk resit bayaran semasa ambil.</p>`:""}
+    ${o.pay==="DuitNow"&&!rej?`<p style="margin:10px 0 0;color:var(--ok);font-weight:700">${o.proof?"✓ Bukti bayaran DuitNow dihantar":"Bayaran DuitNow"}</p>`:""}
     <div style="text-align:left;margin:16px 0">${o.items.map(c=>`<div class="cart-line"><span class="q">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"")}</span></div><span class="pr">${rm2(c.price)}</span></div>`).join("")}</div>
     ${LIVE && !pushOn && !done && window.RN.push && (window.RN.push.supported || window.RN.push.needsInstall) ? `<button class="btn ghost block" data-action="pushFromReceipt" style="margin-bottom:10px">${icon("bell","width:18px;height:18px")}Beritahu saya bila pesanan siap</button>` : ""}
     <button class="btn block" data-action="close">Tutup</button>
@@ -1357,10 +1405,10 @@ function showOrder(no){
 }
 const knownStatus={};
 try{ JSON.parse(localStorage.getItem(SHARED.orders)||"[]").forEach(o=>knownStatus[o.no]=o.status); }catch(e){}
-function latestOrder(){ try{ return JSON.parse(localStorage.getItem(SHARED.orders)||"[]").find(o=>o.memberId===S.memberId&&o.status!=="Selesai"); }catch(e){ return null; } }
+function latestOrder(){ try{ return JSON.parse(localStorage.getItem(SHARED.orders)||"[]").find(o=>o.memberId===S.memberId&&!isClosed(o)); }catch(e){ return null; } }
 function renderOrderTile(){
   const o=latestOrder(), sub=$("#h-order-sub"); if(!sub) return;
-  sub.textContent = o ? `Pesanan #${o.no}: ${o.status}` : "Setiap item = 1 cap automatik";
+  sub.textContent = o ? `Pesanan #${o.no}: ${stTxt(o.status)}` : "Setiap item = 1 cap automatik";
   $("#orderTile").dataset.order = o ? o.no : "";
 }
 $("#sheetBody").addEventListener("click", e=>{
@@ -1492,7 +1540,7 @@ addEventListener("storage", e=>{
   if(e.key===SHARED.orders){
     try{ JSON.parse(e.newValue||"[]").forEach(o=>{
       if(o.memberId===S.memberId && knownStatus[o.no] && knownStatus[o.no]!==o.status){
-        toast(o.status==="Siap diambil" ? `Pesanan #${o.no} siap! Sila ambil di kaunter` : `Pesanan #${o.no}: ${o.status}`);
+        toast(o.status==="Siap diambil" ? `Pesanan #${o.no} siap! Sila ambil di kaunter` : o.status==="Disediakan" ? `Pesanan #${o.no} diterima ☕` : o.status==="Ditolak" ? `Pesanan #${o.no} ditolak${o.rejectReason?`: ${o.rejectReason}`:""}` : `Pesanan #${o.no}: ${stTxt(o.status)}`);
         if(navigator.vibrate) navigator.vibrate([30,60,30]);
         if($("#sheet").classList.contains("show") && $("#orderView")?.dataset.no===o.no) showOrder(o.no);
       }

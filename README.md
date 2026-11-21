@@ -30,6 +30,13 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - **WhatsApp sokongan** (Admin → Tetapan, default `601112328504`): pelanggan nampak butang WhatsApp di Profil (Hubungi kami), maklumat kedai, resit pesanan dan "Lupa kata laluan?" pada skrin log masuk. Kosongkan medan untuk sembunyi butang.
 - Tiada delivery. Semua data kedai ada dalam `shop.js` (localStorage `rumangopi-shop-v1`).
 
+## Terima / tolak pesanan & bukti bayaran DuitNow
+- Pesanan baru masuk dengan status **"Perlu disemak"** (pelanggan nampak *Menunggu pengesahan*).
+- Admin tekan kad pesanan untuk **pratonton**: pelanggan & no telefon, masa pesan, pickup, item, jumlah dan bukti bayaran. Kemudian **Terima** atau **Tolak** (dengan sebab; ada pilihan cepat seperti "Item habis", "Bukti bayaran tidak sah").
+- **Terima** → status *Disediakan* dan **cap & point diberi kepada pelanggan ketika ini** (bukan semasa pesan). **Tolak** → status *Ditolak*, tiada point; pelanggan nampak sebab dan (untuk DuitNow) makluman bayaran akan dipulangkan.
+- Pelanggan yang pilih **DuitNow QR** wajib **muat naik screenshot resit** sebelum boleh hantar pesanan. Gambar dikecilkan dan disimpan di `proofs/{no}` (hanya pemilik pesanan & admin boleh lihat).
+- Notifikasi push dihantar kepada pelanggan bila pesanan diterima atau ditolak.
+
 ## Admin dashboard (`admin.html`, demo)
 Buka `/admin` atau `admin.html` dan masukkan PIN demo **1234**.
 - **Ringkasan**: KPI (ahli, pembelian hari ini, point dikeluarkan, tebusan), carta pembelian 14 hari, ganjaran popular, aktiviti terkini dan ahli teratas.

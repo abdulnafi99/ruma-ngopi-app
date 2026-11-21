@@ -314,6 +314,19 @@ label.btn{cursor:pointer}
 .st.Disediakan{background:#FFF2DD;color:#9A5A00}
 .st.Siap{background:rgba(20,164,77,.12);color:var(--ok)}
 .st.Selesai{background:rgba(107,80,72,.1);color:var(--ink-2)}
+.st.Ditolak{background:rgba(179,38,30,.1);color:#B3261E}
+.ord{cursor:pointer}
+.ord .acts{display:flex;gap:8px}
+.ord .acts .btn{flex:1}
+.btn.rej{background:#fff;color:#B3261E;border:1px solid rgba(179,38,30,.25)}
+.ord .pk span.proof{background:rgba(20,164,77,.12);color:var(--ok)}
+.pv-proof{border-radius:16px;background:#fff;border:1px solid var(--line);padding:10px;text-align:center;margin:12px 0}
+.pv-proof img{max-width:100%;max-height:60vh;border-radius:10px;display:block;margin:0 auto;cursor:zoom-in}
+.pv-proof img.big{max-height:none;cursor:zoom-out}
+.pv-meta{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin:10px 0 4px}
+.pv-meta b{color:var(--ink-2);font-weight:600}
+.rj-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.rj-chips button{font-size:12px;font-weight:700;padding:6px 11px;border-radius:99px;background:rgba(179,38,30,.07);color:#8C1D18}
 .nbadge{margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--brand);color:#fff;font-size:11.5px;font-weight:800;display:grid;place-items:center}
 .nav-btn.active .nbadge{background:#fff;color:var(--brand)}
 
@@ -463,7 +476,7 @@ label.btn{cursor:pointer}
     <section class="screen" data-screen="orders">
       <div class="topbar"><div><small id="ordSub">Pesanan dari app pelanggan</small><h1>Pesanan</h1></div><div class="top-actions"><button class="btn ghost" data-action="adminPush" id="adminPushBtn" hidden><svg class="i" data-ic="bell"></svg><span>Notifikasi</span></button></div></div>
       <div class="chips" id="ordChips">
-        <button class="chip-f on" data-of="aktif">Aktif</button><button class="chip-f" data-of="Selesai">Selesai</button><button class="chip-f" data-of="semua">Semua</button>
+        <button class="chip-f on" data-of="aktif">Aktif</button><button class="chip-f" data-of="Baru">Perlu disemak</button><button class="chip-f" data-of="Selesai">Selesai</button><button class="chip-f" data-of="Ditolak">Ditolak</button><button class="chip-f" data-of="semua">Semua</button>
       </div>
       <div class="ord-grid" id="ordGrid"></div>
     </section>
@@ -774,12 +787,12 @@ function allTx(){
   return [...DB.tx,...c].sort((a,b)=>b.ts-a.ts);
 }
 /* Ubah ahli — tulis ke tempat yang betul */
-function updateMember(id,fn,txEntry){
+function updateMember(id,fn,txEntry,silent){
   if(LIVE){
     const m=DB.members.find(x=>x.id===id); if(!m) return;
     fn(m); if(txEntry){DB.tx.unshift({...txEntry,id}); m.last=txEntry.ts;}   // paparan segera
     Promise.resolve(window.RN.txMember(id,fn,txEntry)).then(()=>{                // simpan atomik ke Firebase
-      if(txEntry) window.RN.notify("member.update",{memberId:id,text:`${txEntry.t}${txEntry.p?` (${txEntry.p>0?"+":""}${txEntry.p} point)`:""}`});
+      if(txEntry && !silent) window.RN.notify("member.update",{memberId:id,text:`${txEntry.t}${txEntry.p?` (${txEntry.p>0?"+":""}${txEntry.p} point)`:""}`});
     });
     return;
   }
@@ -1312,27 +1325,84 @@ function deleteProduct(){
 /* =========================================================
    PESANAN
    ========================================================= */
-const ORDER_FLOW={"Baru":["Disediakan","Mula sediakan"],"Disediakan":["Siap diambil","Tandakan siap"],"Siap diambil":["Selesai","Sudah diambil"]};
+const ORDER_FLOW={"Disediakan":["Siap diambil","Tandakan siap"],"Siap diambil":["Selesai","Sudah diambil"]};
+const ST_TXT={"Baru":"Perlu disemak","Disediakan":"Disediakan","Siap diambil":"Siap diambil","Selesai":"Selesai","Ditolak":"Ditolak"};
+const ordClosed=o=>o.status==="Selesai"||o.status==="Ditolak";
 let ordFilter="aktif";
 function renderOrderBadge(){
-  const n=ORDERS.filter(o=>o.status!=="Selesai").length, b=$("#ordBadge");
+  const n=ORDERS.filter(o=>!ordClosed(o)).length, b=$("#ordBadge");
   if(b){ b.hidden=!n; b.textContent=n; }
 }
 function renderOrders(){
   $$("#ordChips .chip-f").forEach(c=>c.classList.toggle("on",c.dataset.of===ordFilter));
-  const list=ORDERS.filter(o=>ordFilter==="semua"||(ordFilter==="aktif"?o.status!=="Selesai":o.status===ordFilter));
-  const act=ORDERS.filter(o=>o.status!=="Selesai").length;
-  $("#ordSub").textContent=`${act} pesanan aktif`;
+  const list=ORDERS.filter(o=>ordFilter==="semua"||(ordFilter==="aktif"?!ordClosed(o):o.status===ordFilter));
+  const act=ORDERS.filter(o=>!ordClosed(o)).length, baru=ORDERS.filter(o=>o.status==="Baru").length;
+  $("#ordSub").textContent=`${act} pesanan aktif${baru?` · ${baru} perlu disemak`:""}`;
   $("#ordGrid").innerHTML=list.map(o=>{
     const nx=ORDER_FLOW[o.status];
-    return `<div class="tile ord">
-      <div class="oh"><div><div class="no">#${esc(o.no)}</div><div class="who2">${esc(o.name)} · ${ago(o.ts)}</div></div><span class="st ${o.status.split(" ")[0]}">${esc(o.status)}</span></div>
-      <div class="pk">${o.pickup?.pre?`<span class="pre">Pra-pesanan</span>`:""}<span>${icon("clock")}Pickup ${esc(o.pickup?.label||"secepat mungkin")}</span><span class="${o.pay==="DuitNow"?"duit":""}">${icon("wallet")}${o.pay==="DuitNow"?"DuitNow QR":"Bayar di kaunter"}</span></div>
+    return `<div class="tile ord" data-preview="${esc(o.no)}">
+      <div class="oh"><div><div class="no">#${esc(o.no)}</div><div class="who2">${esc(o.name)} · ${ago(o.ts)}</div></div><span class="st ${o.status.split(" ")[0]}">${esc(ST_TXT[o.status]||o.status)}</span></div>
+      <div class="pk">${o.pickup?.pre?`<span class="pre">Pra-pesanan</span>`:""}<span>${icon("clock")}Pickup ${esc(o.pickup?.label||"secepat mungkin")}</span><span class="${o.pay==="DuitNow"?"duit":""}">${icon("wallet")}${o.pay==="DuitNow"?"DuitNow QR":"Bayar di kaunter"}</span>${o.proof?`<span class="proof">${icon("check")}Ada bukti bayaran</span>`:""}</div>
       <div>${o.items.map(c=>`<div class="it"><span class="mono" style="color:var(--brand);font-weight:700">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"")}</span></div><span class="mono">${rmf(c.price)}</span></div>`).join("")}</div>
       <div class="tot"><span>Jumlah</span><span class="mono">${rmf(o.total)}</span></div>
+      ${o.status==="Baru" ? `<div class="acts"><button class="btn rej" data-action="rejectOrderAsk" data-no="${esc(o.no)}">${icon("x")}Tolak</button>${o.pay==="DuitNow"
+          ? `<button class="btn red" data-action="previewOrder" data-no="${esc(o.no)}">${icon("search")}Semak bayaran</button>`
+          : `<button class="btn red" data-action="acceptOrder" data-no="${esc(o.no)}">${icon("check")}Terima</button>`}</div>` : ""}
+      ${o.status==="Ditolak"&&o.rejectReason?`<div class="who2" style="color:#B3261E">Sebab: ${esc(o.rejectReason)}</div>`:""}
       ${nx?`<button class="btn ${o.status==="Disediakan"?"red":""} block" data-action="advanceOrder" data-no="${esc(o.no)}">${icon("check")}${nx[1]}</button>`:""}
     </div>`;}).join("") || `<div class="tile empty">Tiada pesanan di sini.</div>`;
 }
+/* ---------- Terima / tolak & pratonton pesanan ---------- */
+async function loadProof(no){
+  if(LIVE) return window.RN.getProof(no);
+  try{ return JSON.parse(localStorage.getItem("rumangopi-proofs-v1")||"{}")[no]||null; }catch(e){ return null; }
+}
+function previewOrder(no){
+  const o=ORDERS.find(x=>x.no===no); if(!o) return;
+  const m=getMember(o.memberId), phone=o.phone||m?.phone||"";
+  openSheet(`
+    <h2>Pesanan #${esc(o.no)} <span class="st ${o.status.split(" ")[0]}" style="vertical-align:middle;margin-left:6px">${esc(ST_TXT[o.status]||o.status)}</span></h2>
+    <div class="pv-meta">
+      <b>Pelanggan</b><span>${esc(o.name)}${phone?` · <a href="tel:+${esc(phone)}" class="mono">+${esc(phone)}</a>`:""}</span>
+      <b>Masa pesan</b><span>${new Date(o.ts).toLocaleString("ms-MY",{dateStyle:"medium",timeStyle:"short"})}</span>
+      <b>Pickup</b><span>${o.pickup?.pre?"<b style='color:#9A5A00'>Pra-pesanan</b> · ":""}${esc(o.pickup?.label||"Secepat mungkin")}</span>
+      <b>Bayaran</b><span>${o.pay==="DuitNow"?"DuitNow QR":"Bayar di kaunter"}</span>
+    </div>
+    <div class="ord" style="cursor:default">${o.items.map(c=>`<div class="it"><span class="mono" style="color:var(--brand);font-weight:700">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"")}</span></div><span class="mono">${rmf(c.price)}</span></div>`).join("")}
+      <div class="tot"><span>Jumlah</span><span class="mono">${rmf(o.total)}</span></div></div>
+    ${o.pay==="DuitNow"?`<div class="pv-proof" id="pvProof"><div class="note">${o.proof?"Memuatkan bukti bayaran…":"Tiada bukti bayaran dimuat naik"}</div></div>`:""}
+    ${o.status==="Ditolak"&&o.rejectReason?`<p class="note" style="color:#B3261E">Ditolak: ${esc(o.rejectReason)}</p>`:""}
+    ${o.status==="Baru"?`
+      <label class="field" style="margin-top:14px"><span>Sebab tolak (jika tolak)</span><input class="input" id="rjReason" maxlength="120" placeholder="cth. Item habis"></label>
+      <div class="rj-chips">${["Item habis","Kedai terlalu sibuk","Bukti bayaran tidak sah","Jumlah bayaran tidak sama","Kedai tutup"].map(r=>`<button type="button" data-rj="${r}">${r}</button>`).join("")}</div>
+      <div class="row" style="margin-top:12px"><button class="btn rej grow" data-action="rejectOrder" data-no="${esc(o.no)}">${icon("x")}Tolak</button><button class="btn red grow" data-action="acceptOrder" data-no="${esc(o.no)}">${icon("check")}Terima pesanan</button></div>`
+    : ORDER_FLOW[o.status]?`<button class="btn red block" style="margin-top:14px" data-action="advanceOrder" data-no="${esc(o.no)}">${icon("check")}${ORDER_FLOW[o.status][1]}</button>`:""}`, true);
+  if(o.pay==="DuitNow"&&o.proof) loadProof(no).then(img=>{
+    const box=$("#pvProof"); if(!box) return;
+    box.innerHTML = img ? `<div class="note" style="margin-bottom:8px">Bukti bayaran DuitNow · semak jumlah <b class="mono">${rmf(o.total)}</b> (tekan untuk besarkan)</div><img src="${img}" alt="Bukti bayaran" id="pvImg">` : `<div class="note">Bukti bayaran tidak dijumpai</div>`;
+    $("#pvImg")?.addEventListener("click",e=>e.currentTarget.classList.toggle("big"));
+  }).catch(()=>{ const box=$("#pvProof"); if(box) box.innerHTML=`<div class="note">Gagal memuatkan bukti bayaran</div>`; });
+}
+function acceptOrder(no){
+  const list=read(ADMIN.keys.orders,[]), o=list.find(x=>x.no===no); if(!o||o.status!=="Baru") return;
+  const n=o.items.length, P=SETTINGS.pointsPerPurchase, T=SETTINGS.stampTarget, pts=n*P;
+  o.status="Disediakan"; o.acceptedAt=Date.now(); o.earned={points:pts,stamps:n};
+  write(ADMIN.keys.orders,list); ORDERS=list;
+  if(getMember(o.memberId)) updateMember(o.memberId,x=>{x.points+=pts;x.lifetime+=pts;x.stamps=Math.min(T,x.stamps+n);},{ts:Date.now(),k:"buy",t:`Pesanan #${no} (${n} item)`,p:pts,n},true);
+  if(LIVE) window.RN.notify("order.status",{no,status:"Disediakan"});
+  closeSheet(); renderOrders(); renderOrderBadge(); toast(`#${no} diterima · +${n} cap & +${fmt(pts)} point untuk ${o.name.split(" ")[0]}`);
+}
+function rejectOrder(no, reason){
+  const list=read(ADMIN.keys.orders,[]), o=list.find(x=>x.no===no); if(!o||o.status!=="Baru") return;
+  o.status="Ditolak"; o.rejectedAt=Date.now(); o.rejectReason=String(reason||"").trim().slice(0,120);
+  write(ADMIN.keys.orders,list); ORDERS=list;
+  if(LIVE) window.RN.notify("order.status",{no,status:"Ditolak"});
+  closeSheet(); renderOrders(); renderOrderBadge(); toast(`#${no} ditolak`);
+}
+document.addEventListener("click",e=>{
+  const rj=e.target.closest("[data-rj]"); if(rj){ $("#rjReason").value=rj.dataset.rj; return; }
+  const card=e.target.closest(".ord[data-preview]"); if(card && !e.target.closest("button,a")) previewOrder(card.dataset.preview);
+});
 function advanceOrder(no){
   const list=read(ADMIN.keys.orders,[]), o=list.find(x=>x.no===no); if(!o||!ORDER_FLOW[o.status]) return;
   o.status=ORDER_FLOW[o.status][0]; write(ADMIN.keys.orders,list); ORDERS=list;
@@ -1365,7 +1435,9 @@ document.addEventListener("click",e=>{
     exportCSV, newReward:()=>editReward(""), editReward:()=>editReward(d.r), saveReward:()=>saveReward(d.r),
     deleteReward:()=>deleteReward(d.r), toggleReward:()=>toggleReward(d.r), moveReward:()=>moveReward(d.r,+d.d),
     newProduct:()=>editProduct(""), editProduct:()=>editProduct(d.p), toggleProduct:()=>toggleProduct(d.p),
-    saveProduct, deleteProduct, advanceOrder:()=>advanceOrder(d.no),
+    saveProduct, deleteProduct, advanceOrder:()=>{ closeSheet(); advanceOrder(d.no); },
+    previewOrder:()=>previewOrder(d.no), acceptOrder:()=>acceptOrder(d.no),
+    rejectOrderAsk:()=>previewOrder(d.no), rejectOrder:()=>rejectOrder(d.no,$("#rjReason")?.value),
     adminPush, adminPushTest,
     saveSettings, resetDemo, saveShop, saveQrName, removeQr, savePickup, copyHours,
     logout:()=>{sessionStorage.removeItem("rumangopi-admin-auth"); if(LIVE&&window.RN.signOut) window.RN.signOut().finally(()=>location.reload()); else location.reload();},

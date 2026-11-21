@@ -21,7 +21,8 @@ const webpush = require("web-push");
 const ADMIN_UIDS = ["cqFIzYAssCX2HIcbdHFMyvbF0q33"];
 const DB_URL = process.env.FIREBASE_DB_URL || "https://rumangopi-app-default-rtdb.asia-southeast1.firebasedatabase.app";
 const STATUS_MSG = {
-  "Disediakan":   (o) => ({ title: `Pesanan #${o.no} sedang disediakan ☕`, body: "Kami sedang bancuh pesanan anda." }),
+  "Disediakan":   (o) => ({ title: `Pesanan #${o.no} diterima ☕`, body: "Kami sedang sediakan pesanan anda." }),
+  "Ditolak":      (o) => ({ title: `Pesanan #${o.no} ditolak`, body: (o.rejectReason ? `Sebab: ${o.rejectReason}. ` : "") + (o.pay === "DuitNow" ? "Bayaran akan dipulangkan. " : "") + "Hubungi kedai jika ada pertanyaan." }),
   "Siap diambil": (o) => ({ title: `Pesanan #${o.no} siap! 🎉`, body: "Sila ambil di kaunter RumaNgopi." }),
   "Selesai":      (o) => ({ title: `Terima kasih! #${o.no}`, body: "Pesanan selesai. Jumpa lagi di RumaNgopi." }),
 };
@@ -114,7 +115,7 @@ module.exports = async function handler(req, res){
       const items = Array.isArray(o.items) ? o.items.length : Object.keys(o.items || {}).length;
       const r = await sendTo(db, await adminUids(db), "admin", {
         title: `Pesanan baru #${o.no}`,
-        body: `${o.pickup?.pre ? "Pra-pesanan · " : ""}${o.name || "Ahli"} · ${items} item · ${rm(o.total)} · Pickup ${o.pickup?.label || "secepat mungkin"}${o.pay === "DuitNow" ? " · DuitNow" : ""}`,
+        body: `${o.pickup?.pre ? "Pra-pesanan · " : ""}${o.name || "Ahli"} · ${items} item · ${rm(o.total)} · Pickup ${o.pickup?.label || "secepat mungkin"}${o.pay === "DuitNow" ? " · DuitNow (semak bukti)" : ""}. Tekan untuk terima/tolak.`,
         url: "./admin.html#orders", tag: `order-${o.no}` });
       return res.json({ ok: true, ...r });
     }
