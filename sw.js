@@ -1,6 +1,6 @@
 /* Service worker — cache app shell supaya boleh dibuka luar talian.
    Naikkan VERSION setiap kali anda kemas kini index.html. */
-const VERSION = "rumangopi-v3.2.0";
+const VERSION = "rumangopi-v4.0.0";
 const SHELL = ["./", "./index.html", "./admin.html", "./menu.js", "./shop.js", "./firebase-config.js", "./firebase-sync.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/logo-circle.png"];
 
@@ -27,4 +27,30 @@ self.addEventListener("fetch", e => {
     }
     return r;
   }).catch(() => hit)));
+});
+
+/* ---------- Push notification ---------- */
+self.addEventListener("push", e => {
+  let d = {};
+  try{ d = e.data ? e.data.json() : {}; }catch(_){ d = { body: e.data && e.data.text() }; }
+  const title = d.title || "RumaNgopi";
+  e.waitUntil(self.registration.showNotification(title, {
+    body: d.body || "",
+    icon: "icons/icon-192.png",
+    badge: "icons/icon-192.png",
+    tag: d.tag || undefined,
+    renotify: !!d.tag,
+    vibrate: [80, 40, 80],
+    data: { url: d.url || "./" },
+  }));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const url = new URL(e.notification.data && e.notification.data.url || "./", self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+    const page = new URL(url).pathname;
+    const same = list.find(c => new URL(c.url).pathname === page) || list.find(c => c.url.startsWith(self.registration.scope));
+    if(same){ return same.navigate ? same.navigate(url).then(c => (c || same).focus()).catch(() => same.focus()) : same.focus(); }
+    return self.clients.openWindow(url);
+  }));
 });

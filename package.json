@@ -1,0 +1,10 @@
+{
+  "name": "ruma-ngopi-app",
+  "private": true,
+  "description": "RumaNgopi loyalty & pickup PWA. Static site + Vercel function /api/push (Web Push).",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "firebase-admin": "13.10.0",
+    "web-push": "3.6.7"
+  }
+}
