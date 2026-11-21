@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ms">
+<html lang="ms" data-role="admin">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -176,6 +176,31 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .switch.on::after{transform:translateX(18px)}
 .empty{padding:26px;text-align:center;color:var(--ink-3);font-size:13px}
 .note{font-size:12px;color:var(--ink-3);line-height:1.5}
+textarea.input{resize:vertical;min-height:84px;line-height:1.45}
+.qr-up{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.qr-up .ph{width:132px;height:132px;flex:none;border-radius:18px;background:#fff;border:1px dashed rgba(92,62,51,.28);display:grid;place-items:center;overflow:hidden;color:var(--ink-3);text-align:center;font-size:11.5px;padding:8px}
+.qr-up .ph img{width:100%;height:100%;object-fit:contain;display:block}
+.qr-up .ph.has{border-style:solid;padding:6px}
+.qr-up p{margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+label.btn{cursor:pointer}
+.pk-day{display:grid;grid-template-columns:78px 46px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0}
+.pk-day .tm{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr);gap:8px;align-items:center;min-width:0}
+.pk-day+.pk-day{border-top:1px solid var(--line)}
+.pk-day b{font-size:14px}
+.pk-day .input{padding:9px 10px;font-size:14px;min-width:0;width:100%}
+.pk-day .sep{text-align:center;color:var(--ink-3)}
+.pk-day.off .input{opacity:.35;pointer-events:none}
+.pk-day .closed{font-size:12.5px;color:var(--ink-3);font-weight:600}
+.pk-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pk-chips span{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:5px 9px;border-radius:9px;background:rgba(92,62,51,.08);color:var(--ink-2)}
+.pk-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(20,164,77,.12);color:var(--ok)}
+.pk-status.off{background:rgba(199,119,0,.12);color:var(--warn)}
+.ord .pk{display:flex;flex-wrap:wrap;gap:6px}
+.ord .pk span{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:9px;background:rgba(92,62,51,.08);color:var(--ink-2)}
+.ord .pk span.duit{background:rgba(214,0,110,.1);color:#B0005A}
+.ord .pk svg{width:14px;height:14px}
+@media (max-width:560px){ .pk-day{grid-template-columns:1fr 46px;row-gap:8px} .pk-day .tm{grid-column:1/-1} .pk-day .closed{grid-column:1/-1;order:3} }
+@media (max-width:420px){ .mob-nav button{min-width:40px;padding:0 8px} .mob-nav button.active{padding:0 10px} .mob-nav button.active span{display:none!important} }
 
 /* ---------- Kaunter ---------- */
 .scan-box{position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#1E140F;display:grid;place-items:center;color:rgba(255,255,255,.7);margin-bottom:14px}
@@ -321,8 +346,12 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
     <div class="pin" id="pin">
       <input inputmode="numeric" maxlength="1" aria-label="PIN 1"><input inputmode="numeric" maxlength="1" aria-label="PIN 2"><input inputmode="numeric" maxlength="1" aria-label="PIN 3"><input inputmode="numeric" maxlength="1" aria-label="PIN 4">
     </div>
-    <button class="btn red block" type="submit">Log masuk</button>
-    <div class="hint">Demo: PIN <b class="mono">1234</b></div>
+    <div id="fbLogin" hidden>
+      <input class="input" type="email" id="loginEmail" placeholder="Emel admin" autocomplete="username" style="margin-bottom:10px">
+      <input class="input" type="password" id="loginPass" placeholder="Kata laluan" autocomplete="current-password" style="margin-bottom:14px">
+    </div>
+    <button class="btn red block" type="submit" id="loginBtn">Log masuk</button>
+    <div class="hint" id="loginHint">Demo: PIN <b class="mono">1234</b></div>
   </form>
 </div>
 
@@ -335,11 +364,12 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
     <button class="nav-btn" data-go="orders"><svg class="i" data-ic="receipt"></svg>Pesanan<span class="nbadge" id="ordBadge" hidden>0</span></button>
     <button class="nav-btn" data-go="menu"><svg class="i" data-ic="bag"></svg>Menu &amp; add-on</button>
     <button class="nav-btn" data-go="rewards"><svg class="i" data-ic="gift"></svg>Ganjaran</button>
+    <button class="nav-btn" data-go="pickup"><svg class="i" data-ic="clock"></svg>Waktu pickup</button>
     <button class="nav-btn" data-go="settings"><svg class="i" data-ic="settings"></svg>Tetapan</button>
     <div class="spacer"></div>
     <a class="nav-btn" href="index.html" target="_blank" rel="noopener"><svg class="i" data-ic="external"></svg>Buka app pelanggan</a>
     <button class="nav-btn" data-action="logout"><svg class="i" data-ic="logout"></svg>Log keluar</button>
-    <div class="foot">Mod demo · data dalam pelayar ini</div>
+    <div class="foot" id="syncFoot">Mod demo · data dalam pelayar ini</div>
   </aside>
 
   <main class="main">
@@ -452,8 +482,46 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
     </section>
 
     <!-- ========== TETAPAN ========== -->
+    <section class="screen" data-screen="pickup">
+      <div class="topbar"><div><small>Bila pelanggan boleh ambil pesanan</small><h1>Waktu pickup</h1></div><div class="top-actions"><button class="btn red" data-action="savePickup"><svg class="i" data-ic="check"></svg>Simpan</button></div></div>
+      <div class="grid g-2-1">
+        <div class="tile">
+          <h3>Waktu operasi mingguan <span class="pk-status" id="pkNow">—</span></h3>
+          <div id="pkDays"></div>
+          <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn ghost" data-action="copyHours">Salin waktu Isnin ke semua hari</button></div>
+        </div>
+        <div class="tile">
+          <h3>Tetapan slot</h3>
+          <label class="field"><span>Selang slot pickup</span><select class="input" id="pkSlot"><option value="10">Setiap 10 minit</option><option value="15">Setiap 15 minit</option><option value="20">Setiap 20 minit</option><option value="30">Setiap 30 minit</option><option value="60">Setiap 1 jam</option></select></label>
+          <label class="field"><span>Masa sediakan minimum (minit)</span><input class="input mono" type="number" min="0" max="120" id="pkPrep"></label>
+          <div class="row" style="justify-content:space-between;margin:4px 0 14px"><div><b style="font-size:13.5px">Tutup sementara</b><div class="note">Pelanggan tak boleh buat pesanan</div></div><button class="switch" id="pkPause" aria-label="Tutup sementara"></button></div>
+          <div class="note" style="color:var(--ink-2);font-weight:600">Slot hari ini (pratonton)</div>
+          <div class="pk-chips" id="pkPrev"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="screen" data-screen="settings">
-      <div class="topbar"><div><small>Peraturan program</small><h1>Tetapan</h1></div></div>
+      <div class="topbar"><div><small>Kedai, bayaran &amp; peraturan program</small><h1>Tetapan</h1></div></div>
+      <div class="grid g2" style="margin-bottom:16px">
+        <div class="tile">
+          <h3>Alamat kedai <small>dipapar kepada pelanggan</small></h3>
+          <label class="field"><span>Alamat pickup</span><textarea class="input" id="setAddr" rows="3" maxlength="300" placeholder="cth. No 12, Jalan Mawar 3, Taman Mawar, 43000 Kajang, Selangor"></textarea></label>
+          <label class="field"><span>Link Google Maps (pilihan)</span><input class="input" id="setMaps" type="url" inputmode="url" placeholder="https://maps.app.goo.gl/..."></label>
+          <button class="btn red" data-action="saveShop">Simpan alamat</button>
+          <p class="note" style="margin-top:12px">Pickup sahaja. Alamat ini keluar di tab Order, troli dan resit pesanan pelanggan.</p>
+        </div>
+        <div class="tile">
+          <h3>DuitNow QR <small>bayaran pelanggan</small></h3>
+          <div class="qr-up"><div class="ph" id="qrPh">Belum ada QR</div><p id="qrTxt">Muat naik gambar QR DuitNow kedai (PNG/JPG). Pelanggan boleh pilih <b>DuitNow QR</b> semasa buat pesanan dan imbas QR ini untuk bayar.</p></div>
+          <label class="field"><span>Nama penerima (pilihan)</span><input class="input" id="setQrName" maxlength="60" placeholder="cth. RUMANGOPI ENTERPRISE"></label>
+          <div class="row" style="flex-wrap:wrap">
+            <label class="btn red"><svg class="i" data-ic="upload"></svg><span id="qrBtnTxt">Muat naik QR</span><input type="file" accept="image/png,image/jpeg,image/webp" id="qrFile" hidden></label>
+            <button class="btn ghost" data-action="saveQrName">Simpan nama</button>
+            <button class="btn ghost" data-action="removeQr" id="qrRm" hidden>Buang QR</button>
+          </div>
+        </div>
+      </div>
       <div class="grid g2">
         <div class="tile">
           <h3>Peraturan cap &amp; point</h3>
@@ -462,7 +530,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
           <button class="btn red" data-action="saveSettings">Simpan tetapan</button>
           <p class="note" style="margin-top:12px">Perubahan terus digunakan oleh app pelanggan dalam pelayar yang sama.</p>
         </div>
-        <div class="tile">
+        <div class="tile" id="dataTile">
           <h3>Data demo</h3>
           <p class="note" style="margin-top:0">Semua data dashboard ini adalah data contoh yang disimpan dalam pelayar ini (localStorage). Bila client setuju, data ini akan disambung ke Firebase supaya semua staf dan pelanggan berkongsi data sebenar.</p>
           <div class="row" style="flex-wrap:wrap">
@@ -482,6 +550,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
   <button data-go="orders"><svg class="i" data-ic="receipt"></svg><span>Pesanan</span></button>
   <button data-go="menu"><svg class="i" data-ic="bag"></svg><span>Menu</span></button>
   <button data-go="rewards"><svg class="i" data-ic="gift"></svg><span>Ganjaran</span></button>
+  <button data-go="pickup"><svg class="i" data-ic="clock"></svg><span>Pickup</span></button>
   <button data-go="settings"><svg class="i" data-ic="settings"></svg><span>Tetapan</span></button>
 </nav>
 
@@ -489,7 +558,9 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 <aside class="sheet" id="sheet" role="dialog" aria-modal="true"><button class="x" data-action="close" aria-label="Tutup"><svg class="i" data-ic="x"></svg></button><div id="sheetBody"></div></aside>
 <div class="toast" id="toast"></div>
 
+<script src="firebase-config.js"></script>
 <script src="menu.js"></script>
+<script src="shop.js"></script>
 <script>
 /* =========================================================
    KONFIGURASI
@@ -505,6 +576,7 @@ const ADMIN = {
     vouchers: "rumangopi-vouchers-v1",
     menu: "rumangopi-menu-v2",
     orders: "rumangopi-orders-v1",
+    members: "rumangopi-members-live",   // mod live: semua ahli dari Firebase
   },
   tiers: [{name:"Silver",min:0},{name:"Gold",min:1000},{name:"Platinum",min:2000}],
   defaultSettings: { stampTarget: 10, pointsPerPurchase: 20 },
@@ -562,6 +634,10 @@ Object.assign(IC, {
   bowl:'<path d="M3 11h18a9 9 0 0 1-18 0zM7 7l1-4M12 7V2M17 7l-1-4"/>',
   bread:'<path d="M5 11a4 4 0 1 1 3-6.7A4 4 0 0 1 12 3a4 4 0 0 1 4 1.3A4 4 0 1 1 19 11v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/>',
   leaf:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10zM2 21c0-3 1.9-5.4 5.2-6.1"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  upload:'<path d="M12 15V3M7 8l5-5 5 5M5 21h14"/>',
+  pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  wallet:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/>',
   receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1zM16 8h-6M16 12H8M13 16H8"/>',
 });
 const REWARD_ICONS = ["cup","cake","tag","sparkle","bean","gift","ticket"];
@@ -635,22 +711,39 @@ function seedDB(){
   members.forEach(m=>{const bonus=Math.floor(r()*12)*100;m.points+=bonus;m.lifetime+=bonus;});
   return {members,tx,v:1};
 }
+const LIVE = !!(window.RN && window.RN.LIVE);
+/* Mod live: tukar rekod ahli Firebase kepada bentuk dashboard */
+function liveDB(map){
+  const members=[], tx=[];
+  Object.values(map||{}).forEach(m=>{
+    if(!m||!m.memberId) return;
+    const hist=Array.isArray(m.history)?m.history:[];
+    members.push({id:m.memberId,name:m.name||"Ahli",points:+m.points||0,lifetime:+m.lifetime||0,stamps:+m.stamps||0,redeemed:+m.redeemed||0,
+      last:hist.reduce((a,h)=>Math.max(a,h.ts||0),0),joined:m.joined||m.updatedAt||Date.now()});
+    hist.forEach(h=>tx.push({ts:h.ts,id:m.memberId,k:h.p>0?"buy":(h.p<0||/kad cap|percuma/i.test(h.t))?"redeem":"adjust",t:h.t,p:h.p,n:h.n||(h.p>0?Math.max(1,Math.round(h.p/SETTINGS.pointsPerPurchase)):0)}));
+  });
+  return {members,tx,live:true};
+}
 function load(){
-  DB=read(ADMIN.keys.db,null); if(!DB||!DB.members){DB=seedDB();write(ADMIN.keys.db,DB);}
-  CUST=read(ADMIN.keys.customer,null); if(!CUST||!CUST.memberId){CUST=ADMIN.demoCustomer();write(ADMIN.keys.customer,CUST);}
+  SETTINGS=Object.assign({},ADMIN.defaultSettings,read(ADMIN.keys.settings,{}));
+  if(LIVE){ DB=liveDB(read(ADMIN.keys.members,{})); CUST=null; }
+  else{
+    DB=read(ADMIN.keys.db,null); if(!DB||!DB.members){DB=seedDB();write(ADMIN.keys.db,DB);}
+    CUST=read(ADMIN.keys.customer,null); if(!CUST||!CUST.memberId){CUST=ADMIN.demoCustomer();write(ADMIN.keys.customer,CUST);}
+  }
   REWARDS=read(ADMIN.keys.rewards,null); if(!Array.isArray(REWARDS)||!REWARDS.length) REWARDS=structuredClone(ADMIN.defaultRewards);
   SETTINGS=Object.assign({},ADMIN.defaultSettings,read(ADMIN.keys.settings,{}));
   MENU=read(ADMIN.keys.menu,null); if(!Array.isArray(MENU)||!MENU.length) MENU=structuredClone(window.RUMANGOPI_MENU||[]);
-  if(localStorage.getItem(ADMIN.keys.orders)===null) write(ADMIN.keys.orders, seedOrders());
+  if(!LIVE && localStorage.getItem(ADMIN.keys.orders)===null) write(ADMIN.keys.orders, seedOrders());
   ORDERS=read(ADMIN.keys.orders,[]);
 }
 let MENU=[], ORDERS=[];
 function seedOrders(){
   const m=DB.members, now=Date.now();
   return [
-    {no:"A102",ts:now-6*60e3,memberId:m[3].id,name:m[3].name,status:"Baru",total:15.00,items:[
+    {no:"A102",ts:now-6*60e3,memberId:m[3].id,name:m[3].name,status:"Baru",total:15.00,pickup:{label:"Secepat mungkin"},pay:"DuitNow",items:[
       {name:"Spanish Latte",opts:"Large, Extra shot ×1",price:7.00},{name:"Oreo Choco",opts:"Regular, Whip cream ×1",price:8.00}]},
-    {no:"A101",ts:now-14*60e3,memberId:m[7].id,name:m[7].name,status:"Disediakan",total:12.00,items:[
+    {no:"A101",ts:now-14*60e3,memberId:m[7].id,name:m[7].name,status:"Disediakan",total:12.00,pickup:{label:"Hari ini · 3:30 PM"},pay:"Kaunter",items:[
       {name:"Gula Aren",opts:"Large, Cheese foam ×1",price:8.00},{name:"Thai Tea",opts:"Regular",price:4.00}]},
   ];
 }
@@ -664,14 +757,21 @@ function custAsMember(){
   const last=CUST.history.reduce((a,h)=>Math.max(a,h.ts),0);
   return {id:CUST.memberId,name:CUST.name,points:CUST.points,lifetime:CUST.lifetime,stamps:CUST.stamps,redeemed:CUST.redeemed,last,joined:Date.now()-120*DAY,demo:true};
 }
-const allMembers=()=>[custAsMember(),...DB.members];
+const allMembers=()=>LIVE?DB.members:[custAsMember(),...DB.members];
 const getMember=id=>allMembers().find(m=>m.id===id);
 function allTx(){
+  if(LIVE) return [...DB.tx].sort((a,b)=>b.ts-a.ts);
   const c=CUST.history.map(h=>({ts:h.ts,id:CUST.memberId,k:h.p>0?"buy":(h.p<0||/kad cap|percuma/i.test(h.t))?"redeem":"adjust",t:h.t,p:h.p,n:h.n||(h.p>0?Math.max(1,Math.round(h.p/SETTINGS.pointsPerPurchase)):0)}));
   return [...DB.tx,...c].sort((a,b)=>b.ts-a.ts);
 }
 /* Ubah ahli — tulis ke tempat yang betul */
 function updateMember(id,fn,txEntry){
+  if(LIVE){
+    const m=DB.members.find(x=>x.id===id); if(!m) return;
+    fn(m); if(txEntry){DB.tx.unshift({...txEntry,id}); m.last=txEntry.ts;}   // paparan segera
+    window.RN.txMember(id,fn,txEntry);                                        // simpan atomik ke Firebase
+    return;
+  }
   if(id===CUST.memberId){
     const m={points:CUST.points,lifetime:CUST.lifetime,stamps:CUST.stamps,redeemed:CUST.redeemed};
     fn(m); Object.assign(CUST,m);
@@ -697,7 +797,7 @@ function go(name){
   history.replaceState(null,"","#"+name);
 }
 function renderScreen(){
-  ({overview:renderOverview,counter:()=>{},members:renderMembers,rewards:renderRewards,settings:renderSettings,menu:renderMenuAdmin,orders:renderOrders})[current]?.();
+  ({overview:renderOverview,counter:()=>{},members:renderMembers,rewards:renderRewards,settings:renderSettings,pickup:renderPickup,menu:renderMenuAdmin,orders:renderOrders})[current]?.();
   renderOrderBadge();
 }
 
@@ -979,7 +1079,80 @@ function toggleReward(id){ const r=REWARDS.find(x=>x.id===id); r.active=r.active
 /* =========================================================
    TETAPAN
    ========================================================= */
-function renderSettings(){ $("#setStamp").value=SETTINGS.stampTarget; $("#setPts").value=SETTINGS.pointsPerPurchase; }
+const SHOPX = window.RUMANGOPI_SHOP;
+function writeShop(c, okMsg){
+  try{ SHOPX.save(c); toast(okMsg); return true; }
+  catch(e){ toast("Storan penuh. Cuba gambar QR yang lebih kecil."); return false; }
+}
+function renderSettings(){
+  $("#setStamp").value=SETTINGS.stampTarget; $("#setPts").value=SETTINGS.pointsPerPurchase;
+  const c=SHOPX.load();
+  $("#setAddr").value=c.address; $("#setMaps").value=c.maps; $("#setQrName").value=c.qrName;
+  const ph=$("#qrPh"); ph.classList.toggle("has",!!c.qr);
+  ph.innerHTML = c.qr ? `<img src="${c.qr}" alt="DuitNow QR">` : "Belum ada QR";
+  $("#qrRm").hidden=!c.qr; $("#qrBtnTxt").textContent = c.qr ? "Tukar QR" : "Muat naik QR";
+}
+function saveShop(){
+  const c=SHOPX.load(), maps=$("#setMaps").value.trim();
+  if(maps && !/^https:\/\//i.test(maps)){ toast("Link Maps mesti bermula dengan https://"); return; }
+  c.address=$("#setAddr").value.trim(); c.maps=maps;
+  writeShop(c,"Alamat disimpan");
+}
+function saveQrName(){ const c=SHOPX.load(); c.qrName=$("#setQrName").value.trim(); writeShop(c,"Nama penerima disimpan"); }
+function removeQr(){ if(!confirm("Buang QR DuitNow? Pelanggan tak boleh pilih DuitNow lagi.")) return; const c=SHOPX.load(); c.qr=""; if(writeShop(c,"QR dibuang")) renderSettings(); }
+/* Kecilkan gambar QR (maks 640px) supaya muat dalam storan */
+function shrinkImage(file, max=640){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{ const k=Math.min(1,max/Math.max(img.width,img.height)), w=Math.round(img.width*k), h=Math.round(img.height*k);
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h; const x=cv.getContext("2d");
+      x.fillStyle="#fff"; x.fillRect(0,0,w,h); x.imageSmoothingEnabled=k<1; x.drawImage(img,0,0,w,h); URL.revokeObjectURL(url);
+      const png=cv.toDataURL("image/png"), jpg=cv.toDataURL("image/jpeg",.92); res(png.length<=jpg.length*1.5?png:jpg); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("bad image")); };
+    img.src=url;
+  });
+}
+$("#qrFile").addEventListener("change", async e=>{
+  const file=e.target.files[0]; e.target.value=""; if(!file) return;
+  if(!/^image\//.test(file.type)){ toast("Sila pilih fail gambar"); return; }
+  try{ const data=await shrinkImage(file); const c=SHOPX.load(); c.qr=data; c.qrName=$("#setQrName").value.trim()||c.qrName; if(writeShop(c,"QR DuitNow dimuat naik")) renderSettings(); }
+  catch(_){ toast("Gambar tidak dapat dibaca"); }
+});
+
+/* ---------- Waktu pickup ---------- */
+const PK_ORDER=[1,2,3,4,5,6,0];   // Isnin → Ahad
+let PK=null;
+function renderPickup(){
+  if(!PK) PK=SHOPX.load();
+  $("#pkDays").innerHTML=PK_ORDER.map(d=>{ const h=PK.hours[d];
+    return `<div class="pk-day ${h.open?"":"off"}"><b>${SHOPX.DAYS[d]}</b><button class="switch ${h.open?"on":""}" data-pkday="${d}" aria-label="Buka ${SHOPX.DAYS[d]}"></button>
+      ${h.open?`<div class="tm"><input class="input mono" type="time" value="${h.from}" data-pkf="from" data-d="${d}" aria-label="Buka ${SHOPX.DAYS[d]}"><span class="sep">–</span><input class="input mono" type="time" value="${h.to}" data-pkf="to" data-d="${d}" aria-label="Tutup ${SHOPX.DAYS[d]}"></div>`:`<span class="closed">Tutup</span>`}</div>`; }).join("");
+  $("#pkSlot").value=String(PK.slot); $("#pkPrep").value=PK.prep;
+  $("#pkPause").classList.toggle("on",!!PK.paused);
+  pickupPreview();
+}
+function pickupPreview(){
+  const sl=SHOPX.slots(PK), nx=SHOPX.nextOpen(PK), st=$("#pkNow");
+  st.classList.toggle("off",!sl.asap);
+  st.textContent = PK.paused ? "Tutup sementara" : sl.asap ? `Buka · ${SHOPX.todayLabel(PK)}` : (nx?`Tutup · buka ${nx}`:"Tutup");
+  $("#pkPrev").innerHTML = sl.open ? (sl.asap?`<span>Secepat mungkin</span>`:"") + sl.list.slice(0,24).map(m=>`<span>${SHOPX.fmt12(m)}</span>`).join("") + (sl.list.length>24?`<span>+${sl.list.length-24} lagi</span>`:"")
+    : `<span>Tiada slot hari ini</span>`;
+}
+document.addEventListener("click",e=>{
+  const sw=e.target.closest("[data-pkday]"); if(sw){ const h=PK.hours[+sw.dataset.pkday]; h.open=!h.open; renderPickup(); return; }
+  if(e.target.closest("#pkPause")){ PK.paused=!PK.paused; renderPickup(); }
+});
+document.addEventListener("input",e=>{
+  const t=e.target.closest("[data-pkf]"); if(t&&t.value){ PK.hours[+t.dataset.d][t.dataset.pkf]=t.value; pickupPreview(); return; }
+  if(e.target.id==="pkPrep"){ PK.prep=Math.max(0,Math.min(120,parseInt(e.target.value,10)||0)); pickupPreview(); }
+});
+$("#pkSlot").addEventListener("change",e=>{ PK.slot=+e.target.value; pickupPreview(); });
+function copyHours(){ const m=PK.hours[1]; PK.hours=PK.hours.map(()=>({...m})); renderPickup(); toast("Waktu Isnin disalin ke semua hari (belum disimpan)"); }
+function savePickup(){
+  for(const d of PK_ORDER){ const h=PK.hours[d]; if(h.open && SHOPX.toMin(h.to)<=SHOPX.toMin(h.from)){ toast(`${SHOPX.DAYS[d]}: waktu tutup mesti selepas waktu buka`); return; } }
+  const c=SHOPX.load(); c.hours=PK.hours; c.slot=PK.slot; c.prep=PK.prep; c.paused=PK.paused;
+  if(writeShop(c,"Waktu pickup disimpan")){ PK=null; renderPickup(); }
+}
 function saveSettings(){
   const s=parseInt($("#setStamp").value,10), p=parseInt($("#setPts").value,10);
   if(!(s>=4&&s<=20)||!(p>=1)){toast("Nilai tidak sah");return;}
@@ -1130,6 +1303,7 @@ function renderOrders(){
     const nx=ORDER_FLOW[o.status];
     return `<div class="tile ord">
       <div class="oh"><div><div class="no">#${esc(o.no)}</div><div class="who2">${esc(o.name)} · ${ago(o.ts)}</div></div><span class="st ${o.status.split(" ")[0]}">${esc(o.status)}</span></div>
+      <div class="pk"><span>${icon("clock")}Pickup ${esc(o.pickup?.label||"secepat mungkin")}</span><span class="${o.pay==="DuitNow"?"duit":""}">${icon("wallet")}${o.pay==="DuitNow"?"DuitNow QR":"Bayar di kaunter"}</span></div>
       <div>${o.items.map(c=>`<div class="it"><span class="mono" style="color:var(--brand);font-weight:700">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"")}</span></div><span class="mono">${rmf(c.price)}</span></div>`).join("")}</div>
       <div class="tot"><span>Jumlah</span><span class="mono">${rmf(o.total)}</span></div>
       ${nx?`<button class="btn ${o.status==="Disediakan"?"red":""} block" data-action="advanceOrder" data-no="${esc(o.no)}">${icon("check")}${nx[1]}</button>`:""}
@@ -1167,8 +1341,8 @@ document.addEventListener("click",e=>{
     deleteReward:()=>deleteReward(d.r), toggleReward:()=>toggleReward(d.r),
     newProduct:()=>editProduct(""), editProduct:()=>editProduct(d.p), toggleProduct:()=>toggleProduct(d.p),
     saveProduct, deleteProduct, advanceOrder:()=>advanceOrder(d.no),
-    saveSettings, resetDemo,
-    logout:()=>{sessionStorage.removeItem("rumangopi-admin-auth");location.reload();},
+    saveSettings, resetDemo, saveShop, saveQrName, removeQr, savePickup, copyHours,
+    logout:()=>{sessionStorage.removeItem("rumangopi-admin-auth"); if(LIVE&&window.RN.signOut) window.RN.signOut().finally(()=>location.reload()); else location.reload();},
   })[d.action]?.();
 });
 $("#scrim").addEventListener("click",closeSheet);
@@ -1179,6 +1353,7 @@ $("#q").addEventListener("input",renderMembers);
 $("#tierFilter").addEventListener("change",renderMembers);
 /* Segerak langsung dengan app pelanggan (tab lain, pelayar sama) */
 addEventListener("storage",e=>{
+  if(e.key===SHOPX.KEY){ PK=null; if(current==="settings"||current==="pickup") renderScreen(); return; }
   if(!Object.values(ADMIN.keys).includes(e.key)) return;
   if(e.key===ADMIN.keys.orders){ try{ const now=JSON.parse(e.newValue||"[]"), known=new Set(ORDERS.map(o=>o.no)); now.filter(o=>!known.has(o.no)).forEach(o=>toast(`Pesanan baru #${o.no} daripada ${o.name.split(" ")[0]}`)); }catch(_){} }
   load(); renderScreen(); if(current==="counter"&&counterId) renderCounterMember();
@@ -1192,20 +1367,51 @@ pins.forEach((inp,i)=>{
   inp.addEventListener("input",()=>{inp.value=inp.value.replace(/\D/g,"").slice(-1);if(inp.value&&i<3)pins[i+1].focus();if(pins.every(p=>p.value))$("#loginForm").requestSubmit();});
   inp.addEventListener("keydown",e=>{if(e.key==="Backspace"&&!inp.value&&i>0)pins[i-1].focus();});
 });
+if(LIVE){
+  $("#pin").hidden=true; $("#fbLogin").hidden=false;
+  $(".login p").textContent="Log masuk dengan akaun admin Firebase";
+  $("#loginHint").textContent="Akaun admin dicipta di Firebase Console → Authentication.";
+}
+const AUTH_ERR={"auth/invalid-credential":"Emel atau kata laluan salah","auth/wrong-password":"Emel atau kata laluan salah","auth/user-not-found":"Emel atau kata laluan salah",
+  "auth/too-many-requests":"Terlalu banyak cubaan. Cuba sebentar lagi","auth/network-request-failed":"Tiada sambungan internet","auth/operation-not-allowed":"Login emel belum dihidupkan di Firebase"};
 $("#loginForm").addEventListener("submit",e=>{
+  if(LIVE){
+    e.preventDefault();
+    const em=$("#loginEmail").value.trim(), pw=$("#loginPass").value, btn=$("#loginBtn");
+    if(!em||!pw){ toast("Isi emel dan kata laluan"); return; }
+    if(!window.RN.signInAdmin){ toast("Firebase belum sedia. Semak sambungan internet"); return; }
+    btn.disabled=true; btn.textContent="Log masuk…";
+    window.RN.signInAdmin(em,pw).catch(err=>{ const c=$(".login-card");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake"); toast(AUTH_ERR[err.code]||"Gagal log masuk"); })
+      .finally(()=>{ btn.disabled=false; btn.textContent="Log masuk"; });
+    return;
+  }
   e.preventDefault();
   if(pins.map(p=>p.value).join("")===ADMIN.pin){sessionStorage.setItem("rumangopi-admin-auth","1");enter();}
   else{const c=$(".login-card");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake");pins.forEach(p=>p.value="");pins[0].focus();}
 });
 function enter(){
+  if(!$("#login")) return;
   $("#login").remove(); $("#layout").hidden=false; $("#mobNav").hidden=false;
-  const h=(location.hash||"").slice(1); go(["overview","counter","members","rewards","settings","menu","orders"].includes(h)?h:"overview");
+  const h=(location.hash||"").slice(1); go(["overview","counter","members","rewards","settings","pickup","menu","orders"].includes(h)?h:"overview");
 }
 
 /* INIT */
 $$("img.wm").forEach(i=>{if(!i.getAttribute("src"))i.src=WORDMARK;});
 hydrate(); load();
-if(sessionStorage.getItem("rumangopi-admin-auth")==="1") enter(); else pins[0].focus();
+if(LIVE){
+  window.RN.on("auth", user=>{ if(user){ enter(); renderLiveInfo(); } else if($("#login")) $("#loginEmail").focus(); });
+  window.RN.on("status", st=>{ $("#syncFoot").textContent = st==="live" ? "● Live · Firebase Realtime Database" : st==="offline" ? "○ Luar talian · perubahan disimpan bila online" : "Menyambung ke Firebase…"; });
+  window.RN.on("error", e=>{ if(/PERMISSION_DENIED|permission/i.test(e.code)) toast("Tiada kebenaran Firebase. Pastikan UID anda ada dalam /admins dan rules telah di-publish."); else toast(`${e.what} gagal`); });
+}
+else if(sessionStorage.getItem("rumangopi-admin-auth")==="1") enter(); else pins[0].focus();
+function renderLiveInfo(){
+  const t=$("#dataTile"); if(!t) return;
+  t.innerHTML=`<h3>Firebase <small>rumangopi-app</small></h3>
+    <p class="note" style="margin-top:0">Data disambung ke <b>Realtime Database</b>: menu, ganjaran, tetapan, alamat, QR, waktu pickup, ahli, pesanan dan baucar dikongsi secara langsung antara semua peranti.</p>
+    <label class="field"><span>UID admin anda (tambah dalam <span class="mono">/admins</span> di console)</span><input class="input mono" readonly value="${esc(window.RN.uid||"")}" onclick="this.select()"></label>
+    <div class="row" style="flex-wrap:wrap"><button class="btn ghost" data-action="exportCSV"><svg class="i" data-ic="download"></svg>Eksport ahli (CSV)</button></div>`;
+  hydrate(t);
+}
 </script>
 </body>
 </html>
