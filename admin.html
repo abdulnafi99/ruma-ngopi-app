@@ -197,6 +197,7 @@ label.btn{cursor:pointer}
 .pk-status.off{background:rgba(199,119,0,.12);color:var(--warn)}
 .ord .pk{display:flex;flex-wrap:wrap;gap:6px}
 .ord .pk span{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:9px;background:rgba(92,62,51,.08);color:var(--ink-2)}
+.ord .pk span.pre{background:#FFF2DD;color:#9A5A00}
 .ord .pk span.duit{background:rgba(214,0,110,.1);color:#B0005A}
 .ord .pk svg{width:14px;height:14px}
 @media (max-width:560px){ .pk-day{grid-template-columns:1fr 46px;row-gap:8px} .pk-day .tm{grid-column:1/-1} .pk-day .closed{grid-column:1/-1;order:3} }
@@ -508,7 +509,8 @@ label.btn{cursor:pointer}
           <h3>Alamat kedai <small>dipapar kepada pelanggan</small></h3>
           <label class="field"><span>Alamat pickup</span><textarea class="input" id="setAddr" rows="3" maxlength="300" placeholder="cth. No 12, Jalan Mawar 3, Taman Mawar, 43000 Kajang, Selangor"></textarea></label>
           <label class="field"><span>Link Google Maps (pilihan)</span><input class="input" id="setMaps" type="url" inputmode="url" placeholder="https://maps.app.goo.gl/..."></label>
-          <button class="btn red" data-action="saveShop">Simpan alamat</button>
+          <label class="field"><span>No WhatsApp sokongan (pelanggan boleh hubungi)</span><input class="input mono" id="setWa" type="tel" inputmode="tel" placeholder="cth. 601112328504"></label>
+          <button class="btn red" data-action="saveShop">Simpan</button>
           <p class="note" style="margin-top:12px">Pickup sahaja. Alamat ini keluar di tab Order, troli dan resit pesanan pelanggan.</p>
         </div>
         <div class="tile">
@@ -1092,7 +1094,7 @@ function writeShop(c, okMsg){
 function renderSettings(){
   $("#setStamp").value=SETTINGS.stampTarget; $("#setPts").value=SETTINGS.pointsPerPurchase;
   const c=SHOPX.load();
-  $("#setAddr").value=c.address; $("#setMaps").value=c.maps; $("#setQrName").value=c.qrName;
+  $("#setAddr").value=c.address; $("#setMaps").value=c.maps; $("#setQrName").value=c.qrName; $("#setWa").value=c.whatsapp||"";
   const ph=$("#qrPh"); ph.classList.toggle("has",!!c.qr);
   ph.innerHTML = c.qr ? `<img src="${c.qr}" alt="DuitNow QR">` : "Belum ada QR";
   $("#qrRm").hidden=!c.qr; $("#qrBtnTxt").textContent = c.qr ? "Tukar QR" : "Muat naik QR";
@@ -1100,8 +1102,10 @@ function renderSettings(){
 function saveShop(){
   const c=SHOPX.load(), maps=$("#setMaps").value.trim();
   if(maps && !/^https:\/\//i.test(maps)){ toast("Link Maps mesti bermula dengan https://"); return; }
-  c.address=$("#setAddr").value.trim(); c.maps=maps;
-  writeShop(c,"Alamat disimpan");
+  const waRaw=$("#setWa").value.trim(); let wa=waRaw.replace(/\D/g,""); if(wa.startsWith("0")) wa="6"+wa;
+  if(waRaw && !/^60\d{8,11}$/.test(wa)){ toast("No WhatsApp tidak sah. Contoh: 601112328504"); return; }
+  c.address=$("#setAddr").value.trim(); c.maps=maps; c.whatsapp=wa;
+  writeShop(c,"Maklumat kedai disimpan"); $("#setWa").value=wa;
 }
 function saveQrName(){ const c=SHOPX.load(); c.qrName=$("#setQrName").value.trim(); writeShop(c,"Nama penerima disimpan"); }
 function removeQr(){ if(!confirm("Buang QR DuitNow? Pelanggan tak boleh pilih DuitNow lagi.")) return; const c=SHOPX.load(); c.qr=""; if(writeShop(c,"QR dibuang")) renderSettings(); }
@@ -1140,8 +1144,9 @@ function pickupPreview(){
   const sl=SHOPX.slots(PK), nx=SHOPX.nextOpen(PK), st=$("#pkNow");
   st.classList.toggle("off",!sl.asap);
   st.textContent = PK.paused ? "Tutup sementara" : sl.asap ? `Buka · ${SHOPX.todayLabel(PK)}` : (nx?`Tutup · buka ${nx}`:"Tutup");
+  const pre=SHOPX.preorder(PK);
   $("#pkPrev").innerHTML = sl.open ? (sl.asap?`<span>Secepat mungkin</span>`:"") + sl.list.slice(0,24).map(m=>`<span>${SHOPX.fmt12(m)}</span>`).join("") + (sl.list.length>24?`<span>+${sl.list.length-24} lagi</span>`:"")
-    : `<span>Tiada slot hari ini</span>`;
+    : pre ? `<span>Tiada slot hari ini · pra-pesanan dibuka untuk ${pre.day}: ${SHOPX.fmt12(pre.list[0])} – ${SHOPX.fmt12(pre.list.at(-1))}</span>` : `<span>Tiada slot hari ini</span>`;
 }
 document.addEventListener("click",e=>{
   const sw=e.target.closest("[data-pkday]"); if(sw){ const h=PK.hours[+sw.dataset.pkday]; h.open=!h.open; renderPickup(); return; }
@@ -1308,7 +1313,7 @@ function renderOrders(){
     const nx=ORDER_FLOW[o.status];
     return `<div class="tile ord">
       <div class="oh"><div><div class="no">#${esc(o.no)}</div><div class="who2">${esc(o.name)} · ${ago(o.ts)}</div></div><span class="st ${o.status.split(" ")[0]}">${esc(o.status)}</span></div>
-      <div class="pk"><span>${icon("clock")}Pickup ${esc(o.pickup?.label||"secepat mungkin")}</span><span class="${o.pay==="DuitNow"?"duit":""}">${icon("wallet")}${o.pay==="DuitNow"?"DuitNow QR":"Bayar di kaunter"}</span></div>
+      <div class="pk">${o.pickup?.pre?`<span class="pre">Pra-pesanan</span>`:""}<span>${icon("clock")}Pickup ${esc(o.pickup?.label||"secepat mungkin")}</span><span class="${o.pay==="DuitNow"?"duit":""}">${icon("wallet")}${o.pay==="DuitNow"?"DuitNow QR":"Bayar di kaunter"}</span></div>
       <div>${o.items.map(c=>`<div class="it"><span class="mono" style="color:var(--brand);font-weight:700">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"")}</span></div><span class="mono">${rmf(c.price)}</span></div>`).join("")}</div>
       <div class="tot"><span>Jumlah</span><span class="mono">${rmf(o.total)}</span></div>
       ${nx?`<button class="btn ${o.status==="Disediakan"?"red":""} block" data-action="advanceOrder" data-no="${esc(o.no)}">${icon("check")}${nx[1]}</button>`:""}

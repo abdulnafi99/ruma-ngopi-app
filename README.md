@@ -26,6 +26,8 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - **Admin → Tetapan**: alamat pickup + link Google Maps, dan muat naik **QR DuitNow** (gambar dikecilkan automatik) dengan nama penerima.
 - **Admin → Waktu pickup**: waktu buka/tutup setiap hari, selang slot (10–60 minit), masa sediakan minimum, dan suis **Tutup sementara**. Ada pratonton slot hari ini.
 - **App pelanggan**: tab Order tunjuk alamat & status buka/tutup. Dalam troli, pelanggan pilih **masa pickup** (secepat mungkin atau slot hari ini) dan **bayaran** (bayar di kaunter atau DuitNow QR). Bila kedai tutup, butang pesan dimatikan. Resit pesanan tunjuk QR DuitNow untuk dibayar.
+- **Pra-pesanan**: bila tiada slot lagi hari ini (selepas waktu tutup atau hari cuti), pelanggan boleh pra-pesan untuk **hari buka seterusnya** (esok, atau hari buka berikutnya dalam 7 hari). Pesanan ditanda "Pra-pesanan" di admin. Suis *Tutup sementara* menyekat semua pesanan termasuk pra-pesanan.
+- **WhatsApp sokongan** (Admin → Tetapan, default `601112328504`): pelanggan nampak butang WhatsApp di Profil (Hubungi kami), maklumat kedai, resit pesanan dan "Lupa kata laluan?" pada skrin log masuk. Kosongkan medan untuk sembunyi butang.
 - Tiada delivery. Semua data kedai ada dalam `shop.js` (localStorage `rumangopi-shop-v1`).
 
 ## Admin dashboard (`admin.html`, demo)

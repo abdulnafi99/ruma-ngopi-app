@@ -114,7 +114,7 @@ module.exports = async function handler(req, res){
       const items = Array.isArray(o.items) ? o.items.length : Object.keys(o.items || {}).length;
       const r = await sendTo(db, await adminUids(db), "admin", {
         title: `Pesanan baru #${o.no}`,
-        body: `${o.name || "Ahli"} · ${items} item · ${rm(o.total)} · Pickup ${o.pickup?.label || "secepat mungkin"}${o.pay === "DuitNow" ? " · DuitNow" : ""}`,
+        body: `${o.pickup?.pre ? "Pra-pesanan · " : ""}${o.name || "Ahli"} · ${items} item · ${rm(o.total)} · Pickup ${o.pickup?.label || "secepat mungkin"}${o.pay === "DuitNow" ? " · DuitNow" : ""}`,
         url: "./admin.html#orders", tag: `order-${o.no}` });
       return res.json({ ok: true, ...r });
     }
