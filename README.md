@@ -1,12 +1,13 @@
-# Farha Rewards — Template Loyalty PWA
+# RumaNgopi Rewards — Loyalty & Order PWA
 
-Kad loyalti digital (cap + point + ganjaran) dalam gaya **Bento Glass Frost**, tema **merah & putih Farha**.
+Kad loyalti digital (cap + point + ganjaran) dalam gaya **Bento Glass Frost**, tema **coklat kopi & mocha RumaNgopi** (ikut warna logo: `#5C3E33` coklat, `#D5C2BC` mocha).
 Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `index.html`. Tiada framework dan tiada langkah build.
 
 ## Ciri-ciri
-- **Splash screen beranimasi**: huruf "f" muncul, zoom, kemudian logo penuh **farha** terbuka dengan percikan dari cawan.
-- **4 skrin**: Home · Cap & Point · Ganjaran · Profil, dengan bottom nav berbentuk pil.
-- **Kod QR ahli yang boleh diimbas betul-betul**, dijana dalam JS tanpa library (format: `FARHA:<memberId>`).
+- **Splash screen beranimasi**: perkataan **rumaNgopi** keluar huruf demi huruf, cawan kopi dilukis garisan demi garisan (wap, pemegang hati), kemudian **loading bar** dengan peratus di bawah.
+- **5 skrin**: Home · **Order** · Cap & Point · Ganjaran · Profil, dengan bottom nav berbentuk pil.
+- **Tab Order**: dua bahagian, **Menu** (pilih item + add-on + troli) dan **Pesanan saya** (pesanan aktif dengan status langsung + sejarah). Titik pada ikon Order bila ada pesanan aktif.
+- **Kod QR ahli yang boleh diimbas betul-betul**, dijana dalam JS tanpa library (format: `RUMANGOPI:<memberId>`).
 - **Kad cap 10 petak**: bila penuh, petak hadiah boleh ditekan untuk tebus minuman percuma.
 - **Tebus ganjaran**: point ditolak, keluar kod baucar 6 aksara dengan pemasa 10 minit, dan animasi konfeti.
 - **Tahap ahli** (Silver / Gold / Platinum) ikut jumlah point terkumpul.
@@ -14,7 +15,7 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - **Mod demo**: butang "Simulasi pembelian" dan "Set semula data". Data disimpan dalam `localStorage`.
 
 ## Menu, add-on & troli
-- **App pelanggan → Menu**: kategori, produk, add-on dan troli. Setiap item dalam pesanan beri **1 cap** dan point ikut tetapan.
+- **App pelanggan → Order → Menu**: kategori, produk, add-on dan troli. Setiap item dalam pesanan beri **1 cap** dan point ikut tetapan.
 - **Add-on "pilih banyak + kuantiti"**: setiap pilihan ada **had kuantiti per item** (contohnya Fucuk maks 1, Fish ball maks 3), dan kumpulan boleh ada had jumlah (contohnya 6 cucuk). Bila had dicapai, pelanggan diberitahu untuk tambah item yang sama ke troli sekali lagi.
 - **Add-on "pilih satu"**: radio, boleh jadi wajib (contohnya Saiz, Gula, Kuah).
 - **Admin → Menu & add-on**: tambah atau edit produk, kumpulan add-on, harga tambahan, had kuantiti, dan aktif/sembunyi.
@@ -39,7 +40,7 @@ menu.js                ← menu asal kedai (produk & add-on), dikongsi kedua-dua
 vercel.json            ← laluan /admin
 manifest.webmanifest   ← maklumat PWA (nama, warna, ikon)
 sw.js                  ← service worker (cache luar talian)
-icons/                 ← ikon app + logo Farha (PNG)
+icons/                 ← ikon app, logo-circle.png & cup-mark.png (dari logo RumaNgopi)
 ```
 
 ## Jalankan
@@ -54,8 +55,8 @@ Untuk deploy, muat naik folder ini ke mana-mana hosting statik (Vercel, Netlify,
 1. **Warna**: ubah pemboleh ubah `:root` di bahagian atas `<style>` (`--brand`, `--brand-2`, `--brand-deep`, `--blob-*`).
 2. **Menu**: ubah `menu.js` (produk, harga, add-on, had kuantiti).
 3. **Data & ganjaran**: ubah objek `CONFIG` di bahagian atas `<script>`, termasuk nama brand, sasaran cap, senarai ganjaran, tahap ahli dan pengguna demo.
-3. **Logo**: ganti `data:image/png;base64,...` pada `<img class="wm">` dalam splash dengan wordmark putih (PNG lutsinar) anda, dan ganti fail dalam `icons/`.
-   - Animasi splash memaparkan ~16% bahagian kiri logo dahulu (huruf pertama). Laraskan `clip-path:inset(0 84% 0 0)` dan `translateX(42%)` dalam `.sp-slide` jika huruf pertama logo anda lebih lebar atau lebih sempit.
+3. **Logo**: ganti `data:image/png;base64,...` pada `<img class="wm">` (header Home & login admin) dengan tanda putih (PNG lutsinar) anda, dan ganti fail dalam `icons/`.
+   - Splash: teks dalam `.sp-word` dan cawan SVG dalam `.sp-cup`. Tempoh loading bar = `DUR` dalam fungsi `splashLoader()`.
 4. **Manifest**: kemas kini `name`, `short_name` dan `theme_color` dalam `manifest.webmanifest`.
 5. Naikkan `VERSION` dalam `sw.js` setiap kali anda deploy versi baru.
 
