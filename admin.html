@@ -296,6 +296,25 @@ label.btn{cursor:pointer}
 .seg button{padding:7px 12px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--ink-2)}
 .seg button.on{background:var(--brand);color:#fff}
 .cfg-item{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.pm-card{padding:0!important;overflow:hidden;display:flex;flex-direction:column}
+.pm-card.off .pm-img{opacity:.4;filter:grayscale(.6)}
+.pm-img{position:relative;aspect-ratio:1/1;background:#EFE6E2}
+.pm-img img{width:100%;height:100%;object-fit:cover;display:block}
+.pm-img .cap{position:absolute;left:0;right:0;bottom:0;padding:30px 12px 10px;color:#fff;background:linear-gradient(to top,rgba(30,18,12,.75),transparent)}
+.pm-img .cap b{display:block;font-size:14px}.pm-img .cap span{font-size:11px;opacity:.9}
+.pm-img .tagp{position:absolute;top:10px;left:10px;font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:4px 8px;border-radius:99px;background:rgba(255,255,255,.9);color:var(--brand-deep)}
+.pm-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.pm-body .note{margin:0}
+.pm-body .row{gap:6px;justify-content:flex-end}
+.pm-prev{width:100%;max-width:300px;aspect-ratio:1/1;border-radius:20px;overflow:hidden;margin:0 auto 14px;background:#EFE6E2;position:relative;box-shadow:var(--shadow)}
+.pm-prev img{width:100%;height:100%;object-fit:cover}
+.img-field{display:flex;gap:14px;align-items:center}
+.img-field .ph{width:96px;height:96px;border-radius:18px;flex:none;overflow:hidden;background:#EFE6E2;display:grid;place-items:center;color:var(--ink-3)}
+.img-field .ph img{width:100%;height:100%;object-fit:cover}
+.img-field .row{flex-wrap:wrap}
+.prod-card .thumb{width:46px;height:46px;border-radius:14px;overflow:hidden;flex:none}
+.prod-card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .menu-seg{display:flex;gap:4px;padding:4px;border-radius:16px;background:rgba(255,255,255,.7);border:1px solid var(--glass-line);margin:-6px 0 16px;max-width:420px}
 .menu-seg button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border-radius:12px;font-weight:700;font-size:13.5px;color:var(--ink-2)}
 .menu-seg button.on{background:var(--brand);color:#fff;box-shadow:0 8px 18px -10px rgba(92,62,51,.8)}
@@ -442,6 +461,7 @@ label.btn{cursor:pointer}
     <button class="nav-btn" data-go="orders"><svg class="i" data-ic="receipt"></svg>Pesanan<span class="nbadge" id="ordBadge" hidden>0</span></button>
     <button class="nav-btn" data-go="menu"><svg class="i" data-ic="bag"></svg>Menu &amp; add-on</button>
     <button class="nav-btn" data-go="rewards"><svg class="i" data-ic="gift"></svg>Ganjaran</button>
+    <button class="nav-btn" data-go="promo"><svg class="i" data-ic="image"></svg>Promosi</button>
     <button class="nav-btn" data-go="pickup"><svg class="i" data-ic="clock"></svg>Waktu pickup</button>
     <button class="nav-btn" data-go="settings"><svg class="i" data-ic="settings"></svg>Tetapan</button>
     <div class="spacer"></div>
@@ -571,6 +591,13 @@ label.btn{cursor:pointer}
     </section>
 
     <!-- ========== TETAPAN ========== -->
+    <section class="screen" data-screen="promo">
+      <div class="topbar"><div><small>Banner 1:1 di atas Home app pelanggan</small><h1>Promosi</h1></div>
+        <div class="top-actions"><label class="btn red"><svg class="i" data-ic="plus"></svg><span>Tambah banner</span><input type="file" accept="image/*" id="promoFile" hidden></label></div></div>
+      <p class="note" style="margin:-8px 0 14px">Saiz terbaik: segi empat sama 1080 × 1080 px. Gambar dipotong ke 1:1 dari tengah dan dikecilkan automatik. Maksimum 8 banner.</p>
+      <div class="promo-grid" id="promoGrid"></div>
+    </section>
+
     <section class="screen" data-screen="pickup">
       <div class="topbar"><div><small>Bila pelanggan boleh ambil pesanan</small><h1>Waktu pickup</h1></div><div class="top-actions"><button class="btn red" data-action="savePickup"><svg class="i" data-ic="check"></svg>Simpan</button></div></div>
       <div class="grid g-2-1">
@@ -669,6 +696,8 @@ const ADMIN = {
     menu: "rumangopi-menu-v2",
     orders: "rumangopi-orders-v1",
     members: "rumangopi-members-live",   // mod live: semua ahli dari Firebase
+    images: "rumangopi-images-v1",       // gambar item menu
+    promos: "rumangopi-promos-v1",       // banner promosi 1:1
   },
   tiers: [{name:"Silver",min:0},{name:"Gold",min:1000},{name:"Platinum",min:2000}],
   defaultSettings: { stampTarget: 10, pointsPerPurchase: 20, stampReward: "Minuman Percuma" },
@@ -728,6 +757,7 @@ Object.assign(IC, {
   leaf:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10zM2 21c0-3 1.9-5.4 5.2-6.1"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
   sidebar:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M15 10l-2 2 2 2"/>',
   layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
   bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
@@ -887,7 +917,7 @@ function updateMember(id,fn,txEntry,silent){
    NAVIGASI
    ========================================================= */
 let current="overview";
-const SCREEN_TITLE={overview:"Ringkasan",counter:"Kaunter",members:"Ahli",orders:"Pesanan",menu:"Menu & add-on",rewards:"Ganjaran",pickup:"Waktu pickup",settings:"Tetapan"};
+const SCREEN_TITLE={promo:"Promosi",overview:"Ringkasan",counter:"Kaunter",members:"Ahli",orders:"Pesanan",menu:"Menu & add-on",rewards:"Ganjaran",pickup:"Waktu pickup",settings:"Tetapan"};
 const isMobile=()=>matchMedia("(max-width:900px)").matches;
 function sideOpen(){ $("#side").classList.add("open"); $("#sideScrim").classList.add("show"); }
 function sideClose(){ $("#side").classList.remove("open"); $("#sideScrim").classList.remove("show"); }
@@ -908,7 +938,7 @@ function go(name){
   history.replaceState(null,"","#"+name);
 }
 function renderScreen(){
-  ({overview:renderOverview,counter:()=>{},members:renderMembers,rewards:renderRewards,settings:renderSettings,pickup:renderPickup,menu:renderMenuAdmin,orders:renderOrders})[current]?.();
+  ({overview:renderOverview,counter:()=>{},members:renderMembers,rewards:renderRewards,settings:renderSettings,pickup:renderPickup,promo:renderPromoAdmin,menu:renderMenuAdmin,orders:renderOrders})[current]?.();
   renderOrderBadge();
 }
 
@@ -1295,6 +1325,92 @@ function resetDemo(){
    ========================================================= */
 const rmf=n=>"RM "+Number(n||0).toFixed(2);
 const uid=p=>p+Math.random().toString(36).slice(2,7);
+/* ---------- Gambar (item & promosi) ---------- */
+let IMAGES={}, PROMOS=[];
+const loadMedia=()=>{ IMAGES=read(ADMIN.keys.images,{})||{}; PROMOS=read(ADMIN.keys.promos,[])||[]; if(!Array.isArray(PROMOS)) PROMOS=[]; };
+function cropImage(file, size, q){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{ const s=Math.min(img.width,img.height), sx=(img.width-s)/2, sy=(img.height-s)/2, out=Math.min(size,s);
+      const cv=document.createElement("canvas"); cv.width=cv.height=out; const x=cv.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,out,out);
+      x.imageSmoothingQuality="high"; x.drawImage(img,sx,sy,s,s,0,0,out,out); URL.revokeObjectURL(url);
+      let qq=q, d=cv.toDataURL("image/jpeg",qq); while(d.length>size*size*0.42 && qq>.45){ qq-=.08; d=cv.toDataURL("image/jpeg",qq); } res(d); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("bad")); };
+    img.src=url;
+  });
+}
+const saveImages=()=>write(ADMIN.keys.images,IMAGES);
+const savePromos=()=>write(ADMIN.keys.promos,PROMOS);
+
+/* ---------- Promosi (banner 1:1) ---------- */
+function renderPromoAdmin(){
+  loadMedia();
+  $("#promoGrid").innerHTML = PROMOS.map((p,i)=>`
+    <div class="tile pm-card ${p.active===false?"off":""}">
+      <div class="pm-img"><img src="${p.img}" alt="">${p.badge?`<span class="tagp">${esc(p.badge)}</span>`:""}${p.title||p.sub?`<div class="cap">${p.title?`<b>${esc(p.title)}</b>`:""}${p.sub?`<span>${esc(p.sub)}</span>`:""}</div>`:""}</div>
+      <div class="pm-body">
+        <div class="note">${p.link?.type==="product"?`Buka item: <b>${esc(MENU.find(x=>x.id===p.link.value)?.name||"(item dipadam)")}</b>`:p.link?.type==="url"?`Buka pautan: ${esc(p.link.value)}`:"Tiada tindakan bila ditekan"}</div>
+        <div class="row">
+          <button class="btn ghost sm" data-action="movePromo" data-i="${i}" data-d="-1" ${i===0?"disabled":""} aria-label="Naik">▲</button>
+          <button class="btn ghost sm" data-action="movePromo" data-i="${i}" data-d="1" ${i===PROMOS.length-1?"disabled":""} aria-label="Turun">▼</button>
+          <button class="switch ${p.active!==false?"on":""}" data-action="togglePromo" data-i="${i}" aria-label="Aktif"></button>
+          <button class="btn ghost sm" data-action="editPromo" data-i="${i}" aria-label="Edit">${icon("edit","width:16px;height:16px")}</button>
+        </div>
+      </div>
+    </div>`).join("") || `<div class="tile empty">Belum ada banner. Tekan "Tambah banner" dan pilih gambar 1:1.</div>`;
+}
+let pmDraft=null;
+function editPromo(i, img){
+  const p = i>=0 ? PROMOS[i] : null;
+  pmDraft = p ? {...p, link:{...(p.link||{type:"none"})}, idx:i} : { id:"pm"+Date.now().toString(36), img, title:"", sub:"", badge:"", link:{type:"none",value:""}, active:true, idx:-1 };
+  const prods=MENU.filter(x=>x.active!==false);
+  openSheet(`
+    <h2>${p?"Edit banner":"Banner baru"}</h2><p class="sub">Dipaparkan dalam karusel di atas Home app pelanggan.</p>
+    <div class="pm-prev" id="pmPrev"></div>
+    <div class="row" style="justify-content:center;margin:-4px 0 14px"><label class="btn ghost sm"><svg class="i" data-ic="image"></svg>Tukar gambar<input type="file" accept="image/*" id="pmFile" hidden></label></div>
+    <label class="field"><span>Label kecil (pilihan)</span><input class="input" id="pmBadge" maxlength="16" value="${esc(pmDraft.badge||"")}" placeholder="cth. BARU, PROMO, HARI INI"></label>
+    <label class="field"><span>Tajuk atas banner (pilihan)</span><input class="input" id="pmTitle" maxlength="40" value="${esc(pmDraft.title||"")}" placeholder="cth. Beli 2 Percuma 1"></label>
+    <label class="field"><span>Teks kecil (pilihan)</span><input class="input" id="pmSub" maxlength="60" value="${esc(pmDraft.sub||"")}" placeholder="cth. Semua minuman siri Kopi, hujung minggu ini"></label>
+    <p class="note" style="margin:-6px 0 14px">Kosongkan tajuk &amp; teks jika gambar sudah ada tulisan.</p>
+    <label class="field"><span>Bila ditekan</span><select class="input" id="pmLinkType">
+      <option value="none" ${pmDraft.link.type==="none"?"selected":""}>Tiada tindakan</option>
+      <option value="product" ${pmDraft.link.type==="product"?"selected":""}>Buka item menu</option>
+      <option value="url" ${pmDraft.link.type==="url"?"selected":""}>Buka pautan web</option></select></label>
+    <label class="field" id="pmProdF" ${pmDraft.link.type==="product"?"":"hidden"}><span>Item</span><select class="input" id="pmProd">${prods.map(x=>`<option value="${x.id}" ${pmDraft.link.value===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select></label>
+    <label class="field" id="pmUrlF" ${pmDraft.link.type==="url"?"":"hidden"}><span>Pautan (https://)</span><input class="input" id="pmUrl" type="url" value="${esc(pmDraft.link.type==="url"?pmDraft.link.value:"")}" placeholder="https://instagram.com/..."></label>
+    <div class="row" style="margin-top:18px">
+      ${p?`<button class="btn ghost" data-action="deletePromo" aria-label="Padam">${icon("trash")}</button>`:""}
+      <button class="btn red grow" data-action="savePromo">Simpan banner</button>
+    </div>`, true);
+  hydrate($("#sheetBody")); pmPreview();
+  ["pmTitle","pmSub","pmBadge"].forEach(id=>$("#"+id).addEventListener("input",pmPreview));
+  $("#pmLinkType").addEventListener("change",e=>{ $("#pmProdF").hidden=e.target.value!=="product"; $("#pmUrlF").hidden=e.target.value!=="url"; });
+  $("#pmFile").addEventListener("change",async e=>{ const f=e.target.files[0]; if(!f) return; try{ pmDraft.img=await cropImage(f,1080,.82); pmPreview(); }catch(_){ toast("Gambar tidak dapat dibaca"); } });
+}
+function pmPreview(){
+  const t=$("#pmTitle")?.value.trim(), s=$("#pmSub")?.value.trim(), b=$("#pmBadge")?.value.trim();
+  $("#pmPrev").innerHTML=`<div class="pm-img" style="height:100%"><img src="${pmDraft.img}" alt="">${b?`<span class="tagp">${esc(b)}</span>`:""}${t||s?`<div class="cap">${t?`<b style="font-size:17px">${esc(t)}</b>`:""}${s?`<span>${esc(s)}</span>`:""}</div>`:""}</div>`;
+}
+function savePromo(){
+  const d=pmDraft; if(!d) return;
+  const type=$("#pmLinkType").value, url=$("#pmUrl").value.trim();
+  if(type==="url" && !/^https:\/\//i.test(url)){ toast("Pautan mesti bermula dengan https://"); return; }
+  const rec={ id:d.id, img:d.img, title:$("#pmTitle").value.trim(), sub:$("#pmSub").value.trim(), badge:$("#pmBadge").value.trim().toUpperCase(),
+    link: type==="product" ? {type, value:$("#pmProd").value} : type==="url" ? {type, value:url} : {type:"none"}, active:d.active!==false };
+  loadMedia();
+  if(d.idx>=0 && PROMOS[d.idx]?.id===d.id) PROMOS[d.idx]=rec; else PROMOS.push(rec);
+  savePromos(); pmDraft=null; closeSheet(); renderPromoAdmin(); toast("Banner disimpan");
+}
+$("#promoFile").addEventListener("change",async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  loadMedia(); if(PROMOS.length>=8){ toast("Maksimum 8 banner. Padam banner lama dahulu."); return; }
+  if(!/^image\//.test(f.type)){ toast("Sila pilih fail gambar"); return; }
+  try{ editPromo(-1, await cropImage(f,1080,.82)); }catch(_){ toast("Gambar tidak dapat dibaca"); }
+});
+function movePromo(i,d){ loadMedia(); const j=i+d; if(j<0||j>=PROMOS.length) return; [PROMOS[i],PROMOS[j]]=[PROMOS[j],PROMOS[i]]; savePromos(); renderPromoAdmin(); }
+function togglePromo(i){ loadMedia(); const p=PROMOS[i]; if(!p) return; p.active=p.active===false; savePromos(); renderPromoAdmin(); toast(p.active?"Banner dipaparkan":"Banner disembunyikan"); }
+function deletePromo(){ const d=pmDraft; if(!d||!confirm("Padam banner ini?")) return; loadMedia(); PROMOS=PROMOS.filter(x=>x.id!==d.id); savePromos(); pmDraft=null; closeSheet(); renderPromoAdmin(); toast("Banner dipadam"); }
+
 /* ---------- Menu: bahagian Item / Add-on ---------- */
 let menuSec="items";
 function setMenuSec(s){
@@ -1422,12 +1538,13 @@ function deleteAddon(){
   saveMenu(); gdraft=null; closeSheet(); renderMenuAdmin(); toast("Add-on dipadam");
 }
 function renderMenuAdmin(){
+  loadMedia();
   if($("#msecItems")) $("#msecItems").textContent=MENU.length;
   renderAddons();
   $("#menuGrid").innerHTML=MENU.map(p=>{
     const g=p.groups||[], nOpt=g.reduce((a,x)=>a+(x.options||[]).length,0), lim=g.filter(x=>x.type==="multi").length;
     return `<div class="tile prod-card ${p.active===false?"off":""}">
-      <div class="top"><div class="icon-sq">${icon(p.icon||"cup")}</div><span class="badge">${esc(p.cat||"Lain-lain")}</span></div>
+      <div class="top">${IMAGES[p.id]?`<div class="thumb"><img src="${IMAGES[p.id]}" alt=""></div>`:`<div class="icon-sq">${icon(p.icon||"cup")}</div>`}<span class="badge">${esc(p.cat||"Lain-lain")}</span></div>
       <h4>${esc(p.name)}</h4><p>${g.length} kumpulan add-on · ${nOpt} pilihan${lim?` · ${lim} dengan had kuantiti`:""}</p>
       <div class="foot"><span class="price">${rmf(p.price)}</span>
         <div class="row"><button class="switch ${p.active!==false?"on":""}" data-action="toggleProduct" data-p="${p.id}" aria-label="Aktif"></button>
@@ -1441,6 +1558,7 @@ function editProduct(id){
   const p=MENU.find(x=>x.id===id);
   draftIsNew=!p;
   draft=p?structuredClone(p):{id:uid("p"),name:"",desc:"",price:5,cat:"Minuman",icon:"cup",active:true,groups:[]};
+  loadMedia(); draft._img = IMAGES[draft.id] || null;
   openSheet(`<div id="ed"></div>`,true); renderDraft();
 }
 function sstep(attrs,val,min,max,label){
@@ -1457,7 +1575,12 @@ function renderDraft(){
       <label class="field"><span>Kategori</span><input class="input" data-pf="cat" value="${esc(draft.cat||"")}" list="catList"><datalist id="catList">${cats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist></label>
       <label class="field"><span>Penerangan</span><input class="input" data-pf="desc" value="${esc(draft.desc||"")}" maxlength="60"></label>
     </div>
-    <div class="field"><span>Ikon</span><div class="icon-pick">${MENU_ICONS.map(n=>`<button type="button" class="${n===draft.icon?"on":""}" data-ed="icon" data-v="${n}" aria-label="${n}">${icon(n)}</button>`).join("")}</div></div>
+    <div class="field"><span>Gambar item</span><div class="img-field">
+      <div class="ph">${draft._img?`<img src="${draft._img}" alt="">`:icon("image","width:28px;height:28px")}</div>
+      <div><p class="note" style="margin:0 0 8px">Gambar dipotong 1:1 dari tengah. Tanpa gambar, ikon &amp; warna digunakan.</p>
+      <div class="row"><label class="btn ghost sm">${icon("image","width:16px;height:16px")}${draft._img?"Tukar gambar":"Muat naik gambar"}<input type="file" accept="image/*" id="prodImgFile" hidden></label>
+      ${draft._img?`<button type="button" class="btn ghost sm" data-action="removeProdImg">${icon("trash","width:16px;height:16px")}Buang</button>`:""}</div></div></div></div>
+    <div class="field"><span>Ikon (jika tiada gambar)</span><div class="icon-pick">${MENU_ICONS.map(n=>`<button type="button" class="${n===draft.icon?"on":""}" data-ed="icon" data-v="${n}" aria-label="${n}">${icon(n)}</button>`).join("")}</div></div>
 
     <h3 style="margin:22px 0 4px;font-size:15px">Kumpulan add-on</h3>
     <p class="note" style="margin:0 0 12px">"Pilih banyak" membolehkan pelanggan pilih kuantiti. Tetapkan <b>Maks / item</b> untuk setiap pilihan. Pelanggan yang nak lebih perlu tambah item ke troli sekali lagi.</p>
@@ -1519,6 +1642,11 @@ $("#sheetBody").addEventListener("click",e=>{
   const y=$("#sheet").scrollTop; renderDraft(); $("#sheet").scrollTop=y;
   if(d.ed==="addOpt"||d.ed==="addGroup"){ const ins=$$("#ed input.nm, #ed .ged-h input"); const target=d.ed==="addOpt"?[...$$(`#ed input.nm[data-g="${d.g}"]`)].pop():[...$$("#ed .ged-h input")].pop(); target?.focus(); void ins; }
 });
+document.addEventListener("change",async e=>{
+  if(e.target.id!=="prodImgFile"||!draft) return;
+  const f=e.target.files[0]; if(!f) return;
+  try{ draft._img=await cropImage(f,640,.8); renderDraft(); }catch(_){ toast("Gambar tidak dapat dibaca"); }
+});
 function saveProduct(){
   if(!draft.name.trim()){ toast("Isi nama produk"); return; }
   for(const g of draft.groups){
@@ -1526,6 +1654,9 @@ function saveProduct(){
     if(!g.name.trim()||!g.options.length){ toast("Setiap kumpulan perlu nama dan sekurang-kurangnya satu pilihan"); return; }
   }
   draft.name=draft.name.trim(); draft.price=+Number(draft.price).toFixed(2);
+  loadMedia(); const img=draft._img; delete draft._img;
+  if(img) IMAGES[draft.id]=img; else delete IMAGES[draft.id];
+  if(JSON.stringify(IMAGES)!==JSON.stringify(read(ADMIN.keys.images,{})||{})) saveImages();
   const i=MENU.findIndex(x=>x.id===draft.id);
   if(i>=0) MENU[i]=draft; else MENU.push(draft);
   saveMenu(); draft=null; closeSheet(); renderMenuAdmin(); toast("Produk disimpan");
@@ -1534,6 +1665,7 @@ function deleteProduct(){
   if(!draft) return;
   const btn=$('[data-action="deleteProduct"]');
   if(btn.dataset.sure!=="1"){ btn.dataset.sure="1"; btn.innerHTML="Padam?"; btn.classList.add("red"); btn.classList.remove("ghost"); return; }
+  loadMedia(); if(IMAGES[draft.id]){ delete IMAGES[draft.id]; saveImages(); }
   MENU=MENU.filter(x=>x.id!==draft.id); saveMenu(); draft=null; closeSheet(); renderMenuAdmin(); toast("Produk dipadam");
 }
 
@@ -1657,6 +1789,8 @@ document.addEventListener("click",e=>{
     previewOrder:()=>previewOrder(d.no), acceptOrder:()=>acceptOrder(d.no),
     rejectOrderAsk:()=>previewOrder(d.no), rejectOrder:()=>rejectOrder(d.no,$("#rjReason")?.value),
     adminPush, adminPushTest, sideOpen:sideToggleOpen, sideHide,
+    editPromo:()=>editPromo(+d.i), savePromo, deletePromo, movePromo:()=>movePromo(+d.i,+d.d), togglePromo:()=>togglePromo(+d.i),
+    removeProdImg:()=>{ if(draft){ draft._img=null; renderDraft(); } },
     saveSettings, resetDemo, saveShop, saveQrName, removeQr, savePickup, copyHours,
     logout:()=>{sessionStorage.removeItem("rumangopi-admin-auth"); if(LIVE&&window.RN.signOut) window.RN.signOut().finally(()=>location.reload()); else location.reload();},
   })[d.action]?.();
@@ -1711,7 +1845,7 @@ $("#loginForm").addEventListener("submit",e=>{
 function enter(){
   if(!$("#login")) return;
   $("#login").remove(); $("#layout").hidden=false; $("#mobNav").hidden=false;
-  const h=(location.hash||"").slice(1); go(["overview","counter","members","rewards","settings","pickup","menu","orders"].includes(h)?h:"overview");
+  const h=(location.hash||"").slice(1); go(["overview","counter","members","rewards","settings","pickup","promo","menu","orders"].includes(h)?h:"overview");
 }
 
 /* INIT */

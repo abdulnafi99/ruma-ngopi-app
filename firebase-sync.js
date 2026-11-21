@@ -3,6 +3,7 @@
    Dimuatkan oleh firebase-config.js. Struktur data:
 
      store/menu, store/rewards, store/settings, store/shop   ← admin tulis, semua baca
+     store/images {pid: dataURL}, store/promos [banner 1:1]  ← gambar item & promosi
      users/{uid}            { memberId, phone, name }        ← akaun pelanggan → kad ahli
      members/{memberId}     kad ahli (point, cap, sejarah, ownerUid)
      orders/{no}                                             ← pesanan pickup
@@ -29,7 +30,8 @@ isSupported().then(ok => { if(ok) getAnalytics(app); }).catch(() => {});
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-const STORE = { [K.menu]: "store/menu", [K.rewards]: "store/rewards", [K.settings]: "store/settings", [K.shop]: "store/shop" };
+const STORE = { [K.menu]: "store/menu", [K.rewards]: "store/rewards", [K.settings]: "store/settings", [K.shop]: "store/shop",
+  [K.images]: "store/images", [K.promos]: "store/promos" };
 const clean = v => JSON.parse(JSON.stringify(v ?? null));      // buang undefined (Firebase tolak undefined)
 const read = k => { try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
 const fail = what => err => { console.warn(`[RumaNgopi] ${what}:`, err); RN.emit("error", { what, code: err?.code || String(err) }); };
@@ -41,6 +43,8 @@ const NORM = {
   [K.rewards]: v => arr(v),
   [K.settings]: v => v,
   [K.shop]: v => ({ ...v, hours: arr(v.hours) }),
+  [K.images]: v => (v && typeof v === "object" ? v : {}),
+  [K.promos]: v => arr(v),
 };
 const normMember = m => ({ points:0, lifetime:0, stamps:0, redeemed:0, ...m, history: arr(m.history) });
 const normOrder = o => ({ ...o, items: arr(o.items) });

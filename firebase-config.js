@@ -31,6 +31,8 @@ window.RN_FIREBASE_CONFIG = {
     rewards:  "rumangopi-rewards-v1",
     settings: "rumangopi-settings-v1",
     shop:     "rumangopi-shop-v1",
+    images:   "rumangopi-images-v1",    // gambar item menu { productId: dataURL }
+    promos:   "rumangopi-promos-v1",    // banner promosi 1:1
     orders:   "rumangopi-orders-v1",
     vouchers: "rumangopi-vouchers-v1",
     members:  "rumangopi-members-live", // admin: semua ahli dari Firebase

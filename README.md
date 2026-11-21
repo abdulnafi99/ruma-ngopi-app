@@ -32,6 +32,10 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - **WhatsApp sokongan** (Admin → Tetapan, default `601112328504`): pelanggan nampak butang WhatsApp di Profil (Hubungi kami), maklumat kedai, resit pesanan dan "Lupa kata laluan?" pada skrin log masuk. Kosongkan medan untuk sembunyi butang.
 - Tiada delivery. Semua data kedai ada dalam `shop.js` (localStorage `rumangopi-shop-v1`).
 
+## Gambar item & banner promosi
+- **Gambar item**: Admin → Menu & add-on → Edit item → *Gambar item*. Gambar dipotong 1:1 dan dikecilkan (maks 640 px). Dipaparkan pada kad menu dan paparan item pelanggan; tanpa gambar, ikon & warna digunakan. Disimpan berasingan di `store/images` supaya data menu kekal ringan.
+- **Banner promosi 1:1**: Admin → **Promosi** → *Tambah banner*. Gambar dipotong ke segi empat sama (saiz terbaik 1080 × 1080). Boleh tambah label kecil (cth. PROMO), tajuk & teks, dan tindakan bila ditekan (buka item menu atau pautan https). Susun ▲▼, tunjuk/sembunyi, maksimum 8 banner. Dipaparkan sebagai karusel (leret, titik penunjuk, tukar automatik setiap 4.5 s) di atas Home pelanggan. Disimpan di `store/promos`.
+
 ## Terima / tolak pesanan & bukti bayaran DuitNow
 - Pesanan baru masuk dengan status **"Perlu disemak"** (pelanggan nampak *Menunggu pengesahan*).
 - Admin tekan kad pesanan untuk **pratonton**: pelanggan & no telefon, masa pesan, pickup, item, jumlah dan bukti bayaran. Kemudian **Terima** atau **Tolak** (dengan sebab; ada pilihan cepat seperti "Item habis", "Bukti bayaran tidak sah").
