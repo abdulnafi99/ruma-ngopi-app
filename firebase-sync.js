@@ -3,7 +3,7 @@
    Dimuatkan oleh firebase-config.js. Struktur data:
 
      store/menu, store/rewards, store/settings, store/shop   ← admin tulis, semua baca
-     store/images {pid: dataURL}, store/promos [banner 1:1]  ← gambar item & promosi
+     (Firestore) images/{pid}, promos/{id}                   ← gambar item & promosi (firebase-media.js)
      users/{uid}            { memberId, phone, name }        ← akaun pelanggan → kad ahli
      members/{memberId}     kad ahli (point, cap, sejarah, ownerUid)
      orders/{no}                                             ← pesanan pickup
@@ -30,8 +30,7 @@ isSupported().then(ok => { if(ok) getAnalytics(app); }).catch(() => {});
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-const STORE = { [K.menu]: "store/menu", [K.rewards]: "store/rewards", [K.settings]: "store/settings", [K.shop]: "store/shop",
-  [K.images]: "store/images", [K.promos]: "store/promos" };
+const STORE = { [K.menu]: "store/menu", [K.rewards]: "store/rewards", [K.settings]: "store/settings", [K.shop]: "store/shop" };
 const clean = v => JSON.parse(JSON.stringify(v ?? null));      // buang undefined (Firebase tolak undefined)
 const read = k => { try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
 const fail = what => err => { console.warn(`[RumaNgopi] ${what}:`, err); RN.emit("error", { what, code: err?.code || String(err) }); };
@@ -43,8 +42,6 @@ const NORM = {
   [K.rewards]: v => arr(v),
   [K.settings]: v => v,
   [K.shop]: v => ({ ...v, hours: arr(v.hours) }),
-  [K.images]: v => (v && typeof v === "object" ? v : {}),
-  [K.promos]: v => arr(v),
 };
 const normMember = m => ({ points:0, lifetime:0, stamps:0, redeemed:0, ...m, history: arr(m.history) });
 const normOrder = o => ({ ...o, items: arr(o.items) });
@@ -77,8 +74,14 @@ function pushList(k, path, idField, list){
   RN.baseline[k] = list;
   if(Object.keys(upd).length) update(ref(db, path), upd).catch(fail(`Simpan ${path}`));
 }
+/* Gambar item & promosi di Firestore (modul berasingan; jika gagal, bahagian lain tetap jalan) */
+let media = null; const mediaQueue = [];
 function local(k, v){
   let val; try{ val = JSON.parse(v); }catch(e){ return; }
+  if(k === K.images || k === K.promos){
+    if(media) media.local(k, val); else mediaQueue.push([k, val]);
+    return;
+  }
   if(STORE[k]){
     if(ROLE === "admin" && storeReady[k]) set(ref(db, STORE[k]), clean(val)).catch(fail("Simpan tetapan kedai"));
     return;
@@ -288,6 +291,10 @@ RN.signOut = () => signOut(auth);
 onValue(ref(db, ".info/connected"), s => RN.emit("status", s.val() ? "live" : "offline"));
 RN.attach({ local });
 watchStore();   // menu, ganjaran, alamat & waktu: boleh dibaca tanpa log masuk
+import("./firebase-media.js").then(m => {
+  media = m.start({ app, db, RN, K, ROLE, fail });
+  mediaQueue.splice(0).forEach(([k, val]) => media.local(k, val));
+}).catch(err => console.warn("[RumaNgopi] Firestore (gambar) tidak dapat dimuatkan:", err));
 
 let adminStarted = false;
 onAuthStateChanged(auth, async user => {

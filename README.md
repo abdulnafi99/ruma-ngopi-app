@@ -33,8 +33,9 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - Tiada delivery. Semua data kedai ada dalam `shop.js` (localStorage `rumangopi-shop-v1`).
 
 ## Gambar item & banner promosi
-- **Gambar item**: Admin → Menu & add-on → Edit item → *Gambar item*. Gambar dipotong 1:1 dan dikecilkan (maks 640 px). Dipaparkan pada kad menu dan paparan item pelanggan; tanpa gambar, ikon & warna digunakan. Disimpan berasingan di `store/images` supaya data menu kekal ringan.
-- **Banner promosi 1:1**: Admin → **Promosi** → *Tambah banner*. Gambar dipotong ke segi empat sama (saiz terbaik 1080 × 1080). Boleh tambah label kecil (cth. PROMO), tajuk & teks, dan tindakan bila ditekan (buka item menu atau pautan https). Susun ▲▼, tunjuk/sembunyi, maksimum 8 banner. Dipaparkan sebagai karusel (leret, titik penunjuk, tukar automatik setiap 4.5 s) di atas Home pelanggan. Disimpan di `store/promos`.
+- **Gambar item**: Admin → Menu & add-on → Edit item → *Gambar item*. Gambar dipotong 1:1 dan dikecilkan (maks 640 px). Dipaparkan pada kad menu dan paparan item pelanggan; tanpa gambar, ikon & warna digunakan. Disimpan di **Firestore** `images/{productId}` (satu dokumen setiap gambar) supaya data menu kekal ringan.
+- **Banner promosi 1:1**: Admin → **Promosi** → *Tambah banner*. Gambar dipotong ke segi empat sama (saiz terbaik 1080 × 1080). Boleh tambah label kecil (cth. PROMO), tajuk & teks, dan tindakan bila ditekan (buka item menu atau pautan https). Susun ▲▼, tunjuk/sembunyi, maksimum 8 banner. Dipaparkan sebagai karusel (leret, titik penunjuk, tukar automatik setiap 4.5 s) di atas Home pelanggan. Disimpan di **Firestore** `promos/{id}`.
+- **Setup Firestore** (sekali): Firebase Console → *Firestore Database* → *Create database* (lokasi `asia-southeast1`, mod production) → tab *Rules* → salin isi `firestore.rules` → *Publish*. Gambar lama di Realtime Database (`store/images`, `store/promos`) dipindahkan ke Firestore secara automatik bila admin log masuk.
 
 ## Terima / tolak pesanan & bukti bayaran DuitNow
 - Pesanan baru masuk dengan status **"Perlu disemak"** (pelanggan nampak *Menunggu pengesahan*).
@@ -63,6 +64,8 @@ menu.js                ← menu asal kedai (produk & add-on), dikongsi kedua-dua
 shop.js                ← alamat, DuitNow QR & waktu pickup (logik slot), dikongsi kedua-dua halaman
 firebase-config.js     ← config Firebase + lapisan segerak localStorage ↔ Firebase
 firebase-sync.js       ← sambungan Realtime Database, Auth & Analytics
+firebase-media.js      ← gambar item & banner promosi di Firestore
+firestore.rules        ← rules keselamatan Firestore (salin ke console)
 database.rules.json    ← rules keselamatan Realtime Database (salin ke console)
 api/push.js            ← fungsi Vercel: hantar push notification
 package.json           ← kebergantungan fungsi Vercel (firebase-admin, web-push)
