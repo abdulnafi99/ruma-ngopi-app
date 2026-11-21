@@ -93,6 +93,9 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .head h1{margin:0;font-size:26px;letter-spacing:-.02em;font-weight:800}
 .brand-dot{width:46px;height:46px;border-radius:50%;background:var(--brand);display:grid;place-items:center;box-shadow:0 8px 20px -8px rgba(92,62,51,.7);overflow:hidden}
 .brand-dot img{width:78%;display:block}
+.logout-pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:9px 14px;border-radius:999px;background:rgba(179,38,30,.08);color:#B3261E}
+.logout-pill svg{width:17px;height:17px}
+.btn.logout{background:#fff;color:#B3261E;border:1px solid rgba(179,38,30,.22);margin-top:14px}
 .pill-dark{background:var(--brand-deep);color:#fff;font-family:var(--mono);font-size:13px;font-weight:700;padding:8px 13px;border-radius:12px}
 
 /* ---------- Bento ---------- */
@@ -608,7 +611,7 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 
     <!-- ========== 04 PROFIL ========== -->
     <section class="screen" id="s-profile" data-screen="profile">
-      <header class="head"><h1>Profil</h1></header>
+      <header class="head"><h1>Profil</h1><button class="logout-pill" data-action="logout" aria-label="Log keluar"><svg class="i" data-ic="logout"></svg>Log keluar</button></header>
       <div class="bento">
         <div class="tile span2 prof" data-action="editName">
           <div class="avatar" id="p-av">A</div>
@@ -629,7 +632,6 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
           <div class="row"><svg class="i" data-ic="bell"></svg><div class="txt"><b>Notifikasi push</b><span>Cap, promo &amp; ganjaran</span></div><button class="switch" data-toggle="notif" aria-label="Notifikasi"></button></div>
           <div class="row"><svg class="i" data-ic="wifiOff"></svg><div class="txt"><b>Simpan untuk luar talian</b><span>Pas &amp; sejarah dalam peranti</span></div><button class="switch" data-toggle="offline" aria-label="Luar talian"></button></div>
           <div class="row"><svg class="i" data-ic="refresh"></svg><div class="txt"><b>Versi app</b><span id="p-ver">v1.0 · terkini</span></div><span class="tag-mono">PWA</span></div>
-          <button class="row" data-action="logout" id="logoutRow"><svg class="i" data-ic="logout"></svg><div class="txt"><b>Log keluar</b></div><svg class="i" data-ic="chev" style="width:18px"></svg></button>
         </div>
         <div class="tile span2 list rose" id="demoTile">
           <button class="row" data-action="demoBuy"><svg class="i" data-ic="cup"></svg><div class="txt"><b>Simulasi pembelian</b><span>+1 cap &amp; +20 point (mod demo)</span></div><svg class="i" data-ic="chev" style="width:18px"></svg></button>
@@ -637,6 +639,7 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
           <a class="row" href="admin.html" target="_blank" rel="noopener"><svg class="i" data-ic="chart"></svg><div class="txt"><b>Admin dashboard</b><span>Kaunter staf &amp; laporan (demo · PIN 1234)</span></div><svg class="i" data-ic="chev" style="width:18px"></svg></a>
         </div>
       </div>
+      <button class="btn block logout" data-action="logout" id="logoutBtn"><svg class="i" data-ic="logout"></svg>Log keluar</button>
       <p class="demo-note" id="demoNote">Data disimpan dalam peranti (localStorage). Sambung ke backend anda untuk produksi.</p>
     </section>
   </main>
@@ -1420,7 +1423,7 @@ if(LIVE){
   window.RN.on("error", e=>toast(/PERMISSION_DENIED|permission/i.test(e.code) ? "Kedai belum benarkan sambungan. Sila maklumkan kepada staf." : `${e.what} gagal. Cuba lagi.`));
   $("#demoTile").style.display="none";
 
-  $("#demoNote").textContent="Kad ahli anda disimpan dalam peranti ini dan disegerak dengan RumaNgopi.";
+  $("#demoNote").textContent="Kad ahli anda disimpan dalam akaun dan disegerak dengan RumaNgopi.";
 }
 addEventListener("online",net); addEventListener("offline",net);
 
