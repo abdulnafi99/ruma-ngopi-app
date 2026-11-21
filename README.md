@@ -47,6 +47,8 @@ shop.js                ← alamat, DuitNow QR & waktu pickup (logik slot), dikon
 firebase-config.js     ← config Firebase + lapisan segerak localStorage ↔ Firebase
 firebase-sync.js       ← sambungan Realtime Database, Auth & Analytics
 database.rules.json    ← rules keselamatan Realtime Database (salin ke console)
+api/push.js            ← fungsi Vercel: hantar push notification
+package.json           ← kebergantungan fungsi Vercel (firebase-admin, web-push)
 vercel.json            ← laluan /admin
 manifest.webmanifest   ← maklumat PWA (nama, warna, ikon)
 sw.js                  ← service worker (cache luar talian)
@@ -106,6 +108,30 @@ App disambung ke projek Firebase **rumangopi-app** (`firebase-config.js`). Semua
 5. **Authentication → Settings → Authorized domains**: pastikan domain Vercel (`ruma-ngopi-app.vercel.app`) ada.
 
 > Nota keselamatan: point & cap dikira dalam app (bukan server), jadi pelanggan yang mahir teknikal boleh ubah kad sendiri. Untuk perlindungan penuh, pindahkan pengiraan point ke Cloud Functions.
+
+## Push notification (admin & pelanggan)
+Web Push melalui fungsi Vercel **`/api/push`** (`api/push.js`, guna `firebase-admin` + `web-push`).
+
+| Bila | Siapa dapat | Contoh |
+|---|---|---|
+| Pelanggan buat pesanan | semua admin (peranti yang hidupkan notifikasi) | "Pesanan baru #A105 · Siti · 2 item · RM 12.00 · Pickup 3:45 PM" |
+| Admin tukar status | pelanggan pesanan itu | "Pesanan #A105 siap! 🎉 Sila ambil di kaunter" |
+| Kaunter rekod pembelian / tebus / laras point | pelanggan itu | "Kad ahli dikemas kini · Pembelian di kaunter (+20 point) · 60 point, 3 cap" |
+
+- **Pelanggan** hidupkan di **Profil → Notifikasi push**, atau butang "Beritahu saya bila pesanan siap" pada resit.
+- **Admin** hidupkan di **Pesanan → Hidupkan notifikasi** atau **Tetapan → Notifikasi push** (ada butang "Hantar ujian").
+- **iPhone/iPad**: push hanya berfungsi bila app dipasang ke skrin utama (iOS 16.4+).
+- Langganan disimpan di `pushSubs/{uid}`. Server semak Firebase ID token pemanggil dan data sebenar dalam Realtime Database sebelum hantar.
+
+### Setup push (sekali sahaja)
+1. **Jana kunci VAPID** di komputer anda: `npx web-push generate-vapid-keys` (atau mana-mana penjana kunci VAPID).
+2. **Firebase Console → Project settings → Service accounts → Generate new private key** (fail JSON).
+3. **Vercel → projek ruma-ngopi-app → Settings → Environment Variables** (Production), tambah:
+   - `VAPID_PUBLIC_KEY` = Public Key
+   - `VAPID_PRIVATE_KEY` = Private Key (Sensitive)
+   - `VAPID_SUBJECT` = `https://ruma-ngopi-app.vercel.app`
+   - `FIREBASE_SERVICE_ACCOUNT` = seluruh isi fail JSON service account (Sensitive)
+4. **Redeploy** projek, kemudian **Publish** semula `database.rules.json` (ada bahagian baru `pushSubs`).
 
 ## Sambung ke backend
 Template ini menyimpan data secara tempatan sahaja. Untuk produksi, gantikan fungsi `load()`, `save()`, `doRedeem()` dan `demoBuy()` dengan panggilan API ke backend anda (contohnya Firebase atau Supabase), dan buang bahagian "mod demo" di skrin Profil.

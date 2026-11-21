@@ -21,6 +21,7 @@ window.RN_FIREBASE_CONFIG = {
   appId: "1:727813449000:web:7220348ef632cc082d9c1d",
   measurementId: "G-6JVP9LHL1L"
 };
+/* Kunci Web Push (VAPID) disimpan dalam env Vercel; app ambil kunci awam dari GET /api/push?key=1 */
 
 (function(){
   const ROLE = document.documentElement.dataset.role === "admin" ? "admin" : "customer";
@@ -74,7 +75,7 @@ window.RN_FIREBASE_CONFIG = {
     on(type, cb){ listeners[type].push(cb); if(type === "status") cb(RN.status); if(type === "auth" && RN.user !== undefined) cb(RN.user); },
     emit(type, val){ if(type === "status") RN.status = val; if(type === "auth") RN.user = val; listeners[type].forEach(cb => { try{ cb(val); }catch(e){} }); },
     // Diisi oleh firebase-sync.js:
-    nextOrderNo: null, txMember: null, signInAdmin: null, signOut: null,
+    nextOrderNo: null, txMember: null, signInAdmin: null, signOut: null, push: null, notify: () => {},
   };
 
   import("./firebase-sync.js").catch(err => {

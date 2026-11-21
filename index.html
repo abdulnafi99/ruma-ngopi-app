@@ -934,7 +934,7 @@ function render(){
   $("#p-tier-bar").style.width = (tier.pct*100)+"%";
   $("#p-tier-txt").textContent = tier.next ? `${fmt(tier.need)} ke ${tier.next.name}` : "Tahap tertinggi";
   $("#p-redeemed").textContent = S.redeemed;
-  $$("[data-toggle]").forEach(b=>b.classList.toggle("on", !!S[b.dataset.toggle]));
+  $$("[data-toggle]").forEach(b=>b.classList.toggle("on", b.dataset.toggle==="notif" && LIVE ? pushOn : !!S[b.dataset.toggle]));
   if(typeof renderOrderTile==="function") renderOrderTile();
   if(typeof renderOrders==="function") renderOrders();
   if(typeof renderShopbar==="function") renderShopbar();
@@ -1069,7 +1069,25 @@ function saveName(){ const v=$("#nameIn").value.trim(); if(v){S.name=v;save();re
 function confirmBox(title,text,action,label){
   openSheet(`<h2>${title}</h2><p>${text}</p><div class="btn-row"><button class="btn ghost" data-action="close">Batal</button><button class="btn red" data-action="${action}">${label}</button></div>`);
 }
+let pushOn = false;
+const PUSH_ERR = {
+  "push/install":"Di iPhone, pasang app ke skrin utama dahulu (Kongsi → Add to Home Screen), kemudian buka app dan hidupkan notifikasi.",
+  "push/unsupported":"Pelayar ini tidak menyokong notifikasi push.",
+  "push/denied":"Kebenaran notifikasi ditolak. Benarkan dalam tetapan pelayar.",
+  "push/login":"Sila log masuk dahulu.",
+  "push/server":"Notifikasi belum disediakan oleh kedai. Cuba lagi nanti.",
+};
+async function refreshPush(){ try{ pushOn = !!(await window.RN?.push?.isOn?.()); }catch(e){ pushOn=false; } render(); }
+async function enablePush(){
+  try{ await window.RN.push.enable(); pushOn=true; render(); toast("Notifikasi dihidupkan 🔔"); return true; }
+  catch(e){ toast(PUSH_ERR[e?.code] || "Gagal hidupkan notifikasi"); await refreshPush(); return false; }
+}
 async function toggle(key){
+  if(key==="notif" && LIVE && window.RN.push){
+    if(pushOn){ await window.RN.push.disable(); pushOn=false; render(); toast("Notifikasi dimatikan"); }
+    else await enablePush();
+    return;
+  }
   if(key==="notif" && !S.notif && "Notification" in window){
     try{ const p=await Notification.requestPermission(); if(p!=="granted"){ toast("Kebenaran notifikasi ditolak"); return; } }catch(e){}
   }
@@ -1281,6 +1299,7 @@ async function placeOrder(){
   save(); cart=[]; saveCart(); render(); renderCartBar(); confetti();
   if($("#s-menu").classList.contains("active")) setOrderTab("mine"); else { orderTab="mine"; renderOrders(); }
   showOrder(no);
+  if(LIVE) window.RN.notify("order.new", { no });
 }
 const ORDER_STEPS=["Baru","Disediakan","Siap diambil"];
 function showOrder(no){
@@ -1302,6 +1321,7 @@ function showOrder(no){
     ${o.pay==="DuitNow"&&!done&&SHOP.qr?`<div class="qr-pay"><img src="${SHOP.qr}" alt="DuitNow QR"></div>
       <p style="margin:6px 0 0">Imbas &amp; bayar <b class="mono">${rm2(o.total)}</b>${SHOP.qrName?` kepada <b>${esc(SHOP.qrName)}</b>`:""}. Tunjuk resit bayaran semasa ambil.</p>`:""}
     <div style="text-align:left;margin:16px 0">${o.items.map(c=>`<div class="cart-line"><span class="q">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"")}</span></div><span class="pr">${rm2(c.price)}</span></div>`).join("")}</div>
+    ${LIVE && !pushOn && !done && window.RN.push && (window.RN.push.supported || window.RN.push.needsInstall) ? `<button class="btn ghost block" data-action="pushFromReceipt" style="margin-bottom:10px">${icon("bell","width:18px;height:18px")}Beritahu saya bila pesanan siap</button>` : ""}
     <button class="btn block" data-action="close">Tutup</button>
   </div>`);
 }
@@ -1336,7 +1356,8 @@ document.addEventListener("click", e=>{
   const t=e.target.closest("[data-toggle]"); if(t){ toggle(t.dataset.toggle); return; }
   const a=e.target.closest("[data-action]"); if(!a) return;
   ({
-    qr:showQR, close:closeSheet, shopInfo, claimStamp, demoBuy, editName, saveName, addLine, openCart, placeOrder,
+    qr:showQR, close:closeSheet, shopInfo,
+    pushFromReceipt:async()=>{ const b=$('[data-action="pushFromReceipt"]'); if(b){ b.disabled=true; } if(await enablePush()){ if(b){ b.textContent="✓ Kami akan beritahu bila siap"; } } else if(b){ b.disabled=false; } }, claimStamp, demoBuy, editName, saveName, addLine, openCart, placeOrder,
     logout:()=>confirmBox("Log keluar?", LIVE ? "Kad ahli anda kekal dalam akaun. Log masuk semula dengan no telefon dan kata laluan." : "Data kad pada peranti ini akan dipadam.","doLogout","Log keluar"),
     doLogout:()=>{
       if(LIVE){ closeSheet(); go("home"); window.RN.logoutUser().then(()=>toast("Anda telah log keluar")).catch(()=>toast("Gagal log keluar")); return; } localStorage.removeItem(CONFIG.storageKey); load(); save(); closeSheet(); render(); go("home"); toast("Anda telah log keluar (data demo dimuat semula)"); },
@@ -1406,6 +1427,7 @@ $("#gateForm").addEventListener("submit", async e=>{
 if(LIVE){
   window.RN.on("auth", user=>{
     const g=$("#authGate");
+    refreshPush();
     if(user){ g.hidden=true; $("#gErr").textContent=""; }
     else { closeSheet(); showGate(); }
   });
