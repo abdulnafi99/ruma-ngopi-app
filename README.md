@@ -22,6 +22,12 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - **Admin → Pesanan**: pesanan masuk secara langsung, dengan status Baru → Disediakan → Siap diambil → Selesai. Pelanggan dapat notis bila pesanan siap.
 - **Menu asal setiap kedai ada dalam `menu.js`.** Itu satu-satunya tempat untuk ubah menu bila sediakan kedai baru.
 
+## Pickup sahaja: alamat, DuitNow QR & waktu pickup
+- **Admin → Tetapan**: alamat pickup + link Google Maps, dan muat naik **QR DuitNow** (gambar dikecilkan automatik) dengan nama penerima.
+- **Admin → Waktu pickup**: waktu buka/tutup setiap hari, selang slot (10–60 minit), masa sediakan minimum, dan suis **Tutup sementara**. Ada pratonton slot hari ini.
+- **App pelanggan**: tab Order tunjuk alamat & status buka/tutup. Dalam troli, pelanggan pilih **masa pickup** (secepat mungkin atau slot hari ini) dan **bayaran** (bayar di kaunter atau DuitNow QR). Bila kedai tutup, butang pesan dimatikan. Resit pesanan tunjuk QR DuitNow untuk dibayar.
+- Tiada delivery. Semua data kedai ada dalam `shop.js` (localStorage `rumangopi-shop-v1`).
+
 ## Admin dashboard (`admin.html`, demo)
 Buka `/admin` atau `admin.html` dan masukkan PIN demo **1234**.
 - **Ringkasan**: KPI (ahli, pembelian hari ini, point dikeluarkan, tebusan), carta pembelian 14 hari, ganjaran popular, aktiviti terkini dan ahli teratas.
@@ -37,6 +43,7 @@ Buka `/admin` atau `admin.html` dan masukkan PIN demo **1234**.
 index.html             ← app pelanggan: SEMUA UI, CSS & JS (logo dibenam base64)
 admin.html             ← dashboard admin & kaunter staf (satu fail, demo)
 menu.js                ← menu asal kedai (produk & add-on), dikongsi kedua-dua halaman
+shop.js                ← alamat, DuitNow QR & waktu pickup (logik slot), dikongsi kedua-dua halaman
 vercel.json            ← laluan /admin
 manifest.webmanifest   ← maklumat PWA (nama, warna, ikon)
 sw.js                  ← service worker (cache luar talian)

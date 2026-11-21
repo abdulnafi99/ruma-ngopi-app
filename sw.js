@@ -1,7 +1,7 @@
 /* Service worker — cache app shell supaya boleh dibuka luar talian.
    Naikkan VERSION setiap kali anda kemas kini index.html. */
-const VERSION = "rumangopi-v2.2.0";
-const SHELL = ["./", "./index.html", "./admin.html", "./menu.js", "./manifest.webmanifest",
+const VERSION = "rumangopi-v2.3.0";
+const SHELL = ["./", "./index.html", "./admin.html", "./menu.js", "./shop.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/logo-circle.png"];
 
 self.addEventListener("install", e => {
