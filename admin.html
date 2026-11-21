@@ -236,7 +236,11 @@ label.btn{cursor:pointer}
 .icon-sq.soft{background:#fff;color:var(--ink);border:1px solid rgba(0,0,0,.05)}
 .rw h4{margin:auto 0 0;font-size:15px}
 .rw p{margin:0;font-size:12px;color:var(--ink-2)}
-.rw .foot{display:flex;justify-content:space-between;align-items:center}
+.rw .foot{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.rw .foot .note{white-space:nowrap}
+.rw .foot .row{gap:6px;justify-content:flex-end}
+.rw .foot .btn.sm{padding:7px 10px;min-width:34px}
+.rw .foot .switch{margin:0 2px}
 .cost{font-family:var(--mono);font-size:12px;font-weight:700;padding:5px 10px;border-radius:10px;background:var(--brand);color:#fff}
 .rw.off{opacity:.55}
 .badge{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(92,62,51,.08);color:var(--brand)}
@@ -529,6 +533,7 @@ label.btn{cursor:pointer}
           <h3>Peraturan cap &amp; point</h3>
           <label class="field"><span>Cap untuk 1 minuman percuma (1 item = 1 cap)</span><input class="input mono" type="number" min="4" max="20" id="setStamp"></label>
           <label class="field"><span>Point setiap item</span><input class="input mono" type="number" min="1" max="500" id="setPts"></label>
+          <label class="field"><span>Ganjaran bila kad cap penuh</span><input class="input" id="setStampReward" maxlength="40" placeholder="cth. Minuman Percuma"></label>
           <button class="btn red" data-action="saveSettings">Simpan tetapan</button>
           <p class="note" style="margin-top:12px">Perubahan terus digunakan oleh app pelanggan dalam pelayar yang sama.</p>
         </div>
@@ -581,13 +586,13 @@ const ADMIN = {
     members: "rumangopi-members-live",   // mod live: semua ahli dari Firebase
   },
   tiers: [{name:"Silver",min:0},{name:"Gold",min:1000},{name:"Platinum",min:2000}],
-  defaultSettings: { stampTarget: 10, pointsPerPurchase: 20 },
+  defaultSettings: { stampTarget: 10, pointsPerPurchase: 20, stampReward: "Minuman Percuma" },
   defaultRewards: [
-    { id:"drink",  name:"Minuman Percuma", desc:"Sebarang minuman saiz biasa", pts:500,  icon:"cup",     featured:true, active:true },
-    { id:"pastry", name:"Pastri Percuma",  desc:"Pilihan pastri harian",       pts:400,  icon:"cake",    active:true },
-    { id:"rm5",    name:"Diskaun RM5",     desc:"Untuk belian RM20 ke atas",   pts:300,  icon:"tag",     tone:"warm", active:true },
-    { id:"set",    name:"Set Sarapan",     desc:"Minuman + roti bakar",        pts:1500, icon:"sparkle", active:true },
-    { id:"beans",  name:"Biji Kopi 250g",  desc:"Bancuh sendiri di rumah",     pts:2000, icon:"bean",    tone:"warm", active:true },
+    { id:"drink",  name:"Minuman Percuma",   desc:"Sebarang minuman saiz Regular",        pts:500, icon:"cup",     featured:true, active:true },
+    { id:"upsize", name:"Upsize ke Large",   desc:"Naik taraf saiz minuman anda",         pts:150, icon:"sparkle", active:true },
+    { id:"addon",  name:"Add-on Percuma",    desc:"Whip cream, cheese foam atau drizzle", pts:200, icon:"gift",    tone:"warm", active:true },
+    { id:"rm5",    name:"Diskaun RM5",       desc:"Untuk pesanan RM20 ke atas",           pts:300, icon:"tag",     active:true },
+    { id:"duo",    name:"2 Minuman Percuma", desc:"Dua minuman saiz Regular",             pts:900, icon:"ticket",  tone:"warm", active:true },
   ],
   // Pelanggan demo — sama seperti CONFIG.demoUser dalam index.html
   demoCustomer: () => ({
@@ -735,6 +740,7 @@ function load(){
     CUST=read(ADMIN.keys.customer,null); if(!CUST||!CUST.memberId){CUST=ADMIN.demoCustomer();write(ADMIN.keys.customer,CUST);}
   }
   REWARDS=read(ADMIN.keys.rewards,null); if(!Array.isArray(REWARDS)||!REWARDS.length) REWARDS=structuredClone(ADMIN.defaultRewards);
+  REWARDS=REWARDS.filter(r=>r&&r.id&&r.name);
   SETTINGS=Object.assign({},ADMIN.defaultSettings,read(ADMIN.keys.settings,{}));
   MENU=read(ADMIN.keys.menu,null); if(!Array.isArray(MENU)||!MENU.length) MENU=structuredClone(window.RUMANGOPI_MENU||[]);
   if(!LIVE && localStorage.getItem(ADMIN.keys.orders)===null) write(ADMIN.keys.orders, seedOrders());
@@ -1043,13 +1049,14 @@ function exportCSV(){
    ========================================================= */
 function renderRewards(){
   const red=allTx().filter(x=>x.k==="redeem");
-  $("#rwGrid").innerHTML=REWARDS.map(r=>{
+  $("#rwGrid").innerHTML=REWARDS.map((r,i)=>{
     const n=red.filter(x=>x.t===r.name).length;
     return `<div class="tile rw ${r.active===false?"off":""} ${r.tone==="warm"?"warm":""}">
       <div class="top"><div class="icon-sq ${r.featured?"":"soft"}">${icon(r.icon)}</div><span class="cost">${fmt(r.pts)}</span></div>
       <h4>${esc(r.name)} ${r.featured?'<span class="badge">Utama</span>':""}</h4><p>${esc(r.desc)}</p>
       <div class="foot"><span class="note">${n} kali ditebus</span>
-        <div class="row"><button class="switch ${r.active!==false?"on":""}" data-action="toggleReward" data-r="${r.id}" aria-label="Aktif"></button>
+        <div class="row"><button class="btn ghost sm" data-action="moveReward" data-r="${r.id}" data-d="-1" aria-label="Naik" ${i===0?"disabled":""}>▲</button><button class="btn ghost sm" data-action="moveReward" data-r="${r.id}" data-d="1" aria-label="Turun" ${i===REWARDS.length-1?"disabled":""}>▼</button>
+        <button class="switch ${r.active!==false?"on":""}" data-action="toggleReward" data-r="${r.id}" aria-label="Aktif"></button>
         <button class="btn ghost sm" data-action="editReward" data-r="${r.id}" aria-label="Edit">${icon("edit","width:16px;height:16px")}</button></div></div>
     </div>`;}).join("");
 }
@@ -1080,7 +1087,13 @@ function saveReward(id){
   REWARDS.sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
   saveRewards(); closeSheet(); renderRewards(); toast("Ganjaran disimpan");
 }
-function deleteReward(id){ REWARDS=REWARDS.filter(x=>x.id!==id); saveRewards(); closeSheet(); renderRewards(); toast("Ganjaran dipadam"); }
+function moveReward(id,d){
+  const i=REWARDS.findIndex(x=>x.id===id), j=i+d; if(i<0||j<0||j>=REWARDS.length) return;
+  [REWARDS[i],REWARDS[j]]=[REWARDS[j],REWARDS[i]]; saveRewards(); renderRewards();
+}
+function deleteReward(id){ const r=REWARDS.find(x=>x.id===id); if(!r) return;
+  if(REWARDS.length<=1){ toast("Mesti ada sekurang-kurangnya satu ganjaran. Sembunyikan (suis) jika tidak mahu dipaparkan."); return; }
+  if(!confirm(`Padam ganjaran "${r.name}"?`)) return; REWARDS=REWARDS.filter(x=>x.id!==id); saveRewards(); closeSheet(); renderRewards(); toast("Ganjaran dipadam"); }
 function toggleReward(id){ const r=REWARDS.find(x=>x.id===id); r.active=r.active===false; saveRewards(); renderRewards(); toast(r.active?"Ganjaran diaktifkan":"Ganjaran disembunyikan"); }
 
 /* =========================================================
@@ -1092,7 +1105,7 @@ function writeShop(c, okMsg){
   catch(e){ toast("Storan penuh. Cuba gambar QR yang lebih kecil."); return false; }
 }
 function renderSettings(){
-  $("#setStamp").value=SETTINGS.stampTarget; $("#setPts").value=SETTINGS.pointsPerPurchase;
+  $("#setStamp").value=SETTINGS.stampTarget; $("#setPts").value=SETTINGS.pointsPerPurchase; $("#setStampReward").value=SETTINGS.stampReward||"Minuman Percuma";
   const c=SHOPX.load();
   $("#setAddr").value=c.address; $("#setMaps").value=c.maps; $("#setQrName").value=c.qrName; $("#setWa").value=c.whatsapp||"";
   const ph=$("#qrPh"); ph.classList.toggle("has",!!c.qr);
@@ -1166,7 +1179,8 @@ function savePickup(){
 function saveSettings(){
   const s=parseInt($("#setStamp").value,10), p=parseInt($("#setPts").value,10);
   if(!(s>=4&&s<=20)||!(p>=1)){toast("Nilai tidak sah");return;}
-  SETTINGS={stampTarget:s,pointsPerPurchase:p}; write(ADMIN.keys.settings,SETTINGS); toast("Tetapan disimpan");
+  const sr=$("#setStampReward").value.trim()||"Minuman Percuma";
+  SETTINGS={stampTarget:s,pointsPerPurchase:p,stampReward:sr}; write(ADMIN.keys.settings,SETTINGS); toast("Tetapan disimpan");
 }
 function resetDemo(){
   if(!confirm("Set semula semua data demo (ahli, transaksi, ganjaran, tetapan & app pelanggan)?")) return;
@@ -1349,7 +1363,7 @@ document.addEventListener("click",e=>{
     redeemFor:()=>redeemFor(d.r), checkVoucher, useVoucher:()=>useVoucher(d.code),
     adjust:()=>adjust(d.id), toCounter:()=>{closeSheet();go("counter");findMember(d.id);},
     exportCSV, newReward:()=>editReward(""), editReward:()=>editReward(d.r), saveReward:()=>saveReward(d.r),
-    deleteReward:()=>deleteReward(d.r), toggleReward:()=>toggleReward(d.r),
+    deleteReward:()=>deleteReward(d.r), toggleReward:()=>toggleReward(d.r), moveReward:()=>moveReward(d.r,+d.d),
     newProduct:()=>editProduct(""), editProduct:()=>editProduct(d.p), toggleProduct:()=>toggleProduct(d.p),
     saveProduct, deleteProduct, advanceOrder:()=>advanceOrder(d.no),
     adminPush, adminPushTest,

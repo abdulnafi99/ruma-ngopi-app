@@ -35,8 +35,8 @@ Buka `/admin` atau `admin.html` dan masukkan PIN demo **1234**.
 - **Ringkasan**: KPI (ahli, pembelian hari ini, point dikeluarkan, tebusan), carta pembelian 14 hari, ganjaran popular, aktiviti terkini dan ahli teratas.
 - **Kaunter**: imbas QR pelanggan dengan kamera (BarcodeDetector, atau jsQR sebagai fallback) atau taip ID ahli. Kemudian rekod pembelian (+cap, +point), tebus kad cap penuh, tebus ganjaran, dan sahkan kod baucar.
 - **Ahli**: cari, tapis ikut tahap, susun. Lihat butiran dan sejarah, laraskan point, eksport CSV.
-- **Ganjaran**: tambah, edit, padam, aktif/sembunyi, dan pilih ganjaran utama. Perubahan terus muncul dalam app pelanggan.
-- **Tetapan**: bilangan cap untuk minuman percuma dan point setiap minuman.
+- **Ganjaran**: tambah, edit (nama, penerangan, kos point, ikon), padam, aktif/sembunyi, **susun semula (▲▼)**, dan pilih ganjaran utama. Perubahan terus muncul dalam app pelanggan. Mesti ada sekurang-kurangnya satu ganjaran (sembunyikan jika tidak mahu dipaparkan).
+- **Tetapan**: bilangan cap untuk kad penuh, point setiap item, dan **nama ganjaran kad cap** (cth. Minuman Percuma).
 
 **Segerak demo:** admin dan app pelanggan berkongsi `localStorage` dalam pelayar yang sama. Buka `index.html` dan `admin.html` dalam dua tab sebelah-menyebelah. Cap yang ditambah di kaunter terus muncul dalam app pelanggan, dan baucar yang disahkan staf terus bertukar jadi "✓ Telah ditebus di kaunter". Ahli lain dalam dashboard adalah data contoh. Untuk segerak antara peranti, sambung ke Firebase.
 
