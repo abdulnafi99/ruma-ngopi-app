@@ -235,6 +235,9 @@ a.row[hidden]{display:none}
 .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:var(--brand);padding:8px 10px;border-radius:10px}
 .gate-err{min-height:18px;margin:2px 2px 10px;font-size:12.5px;font-weight:600;color:#B3261E}
 .gate-err:empty{min-height:0;margin:0}
+.gate-admin{display:inline-flex;align-items:center;gap:7px;margin-top:16px;padding:10px 16px;border-radius:999px;color:rgba(255,255,255,.9);font-size:13px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08)}
+.gate-admin:active{background:rgba(255,255,255,.18)}
+.gate-admin svg{width:16px;height:16px}
 .gate-note{margin:12px 0 0;text-align:center;font-size:12px;color:var(--ink-3)}
 
 /* ---------- Jalur status bar (notch / Dynamic Island) ---------- */
@@ -676,6 +679,7 @@ a.row[hidden]{display:none}
     </form>
     <p class="gate-note" id="gNote">Lupa kata laluan? Hubungi staf RumaNgopi di kaunter.</p>
   </div>
+  <a class="gate-admin" href="admin" aria-label="Log masuk dashboard admin"><svg class="i" data-ic="user"></svg>Log masuk admin</a>
 </div>
 <div class="statusbar" aria-hidden="true"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true">
