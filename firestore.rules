@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// Firestore RumaNgopi — gambar item & banner promosi.
+// Salin ke Firebase Console → Firestore Database → Rules, kemudian Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin utama (UID sama seperti database.rules.json) + admin tambahan dalam koleksi /admins/{uid}
+    function isAdmin() {
+      return request.auth != null &&
+        (request.auth.uid == 'cqFIzYAssCX2HIcbdHFMyvbF0q33' ||
+         exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+    function isImage(s) {
+      return s is string && s.size() < 1000000 && s.matches('^data:image/(jpeg|png|webp);base64,.*');
+    }
+
+    // Gambar item menu: images/{productId} = { data, updatedAt }
+    match /images/{productId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
+        && isImage(request.resource.data.data);
+      allow delete: if isAdmin();
+    }
+
+    // Banner promosi 1:1: promos/{promoId}
+    match /promos/{promoId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['img', 'title', 'sub', 'badge', 'link', 'active', 'order', 'updatedAt'])
+        && isImage(request.resource.data.img)
+        && request.resource.data.order is int;
+      allow delete: if isAdmin();
+    }
+
+    // Senarai admin tambahan: hanya boleh diurus di console
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Selain di atas: tutup
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

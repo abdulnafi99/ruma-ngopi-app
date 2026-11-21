@@ -1,7 +1,7 @@
 /* Service worker — cache app shell supaya boleh dibuka luar talian.
    Naikkan VERSION setiap kali anda kemas kini index.html. */
-const VERSION = "rumangopi-v4.6.0";
-const SHELL = ["./", "./index.html", "./admin.html", "./menu.js", "./shop.js", "./firebase-config.js", "./firebase-sync.js", "./manifest.webmanifest",
+const VERSION = "rumangopi-v4.7.0";
+const SHELL = ["./", "./index.html", "./admin.html", "./menu.js", "./shop.js", "./firebase-config.js", "./firebase-sync.js", "./firebase-media.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/logo-circle.png"];
 
 self.addEventListener("install", e => {
