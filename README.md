@@ -16,8 +16,8 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 
 ## Menu, add-on & troli
 - **App pelanggan → Order → Menu**: kategori, produk, add-on dan troli. Setiap item dalam pesanan beri **1 cap** dan point ikut tetapan.
-- **Add-on "pilih banyak + kuantiti"**: setiap pilihan ada **had kuantiti per item** (contohnya Fucuk maks 1, Fish ball maks 3), dan kumpulan boleh ada had jumlah (contohnya 6 cucuk). Bila had dicapai, pelanggan diberitahu untuk tambah item yang sama ke troli sekali lagi.
-- **Add-on "pilih satu"**: radio, boleh jadi wajib (contohnya Saiz, Gula, Kuah).
+- **Add-on "pilih banyak + kuantiti"**: setiap pilihan ada **had kuantiti per item** (contohnya Whip cream maks 1, Extra shot maks 2), dan kumpulan boleh ada had jumlah. Bila had dicapai, pelanggan diberitahu untuk tambah item yang sama ke troli sekali lagi.
+- **Add-on "pilih satu"**: radio, boleh jadi wajib (contohnya Saiz Regular / Large +RM1).
 - **Admin → Menu & add-on**: tambah atau edit produk, kumpulan add-on, harga tambahan, had kuantiti, dan aktif/sembunyi.
 - **Admin → Pesanan**: pesanan masuk secara langsung, dengan status Baru → Disediakan → Siap diambil → Selesai. Pelanggan dapat notis bila pesanan siap.
 - **Menu asal setiap kedai ada dalam `menu.js`.** Itu satu-satunya tempat untuk ubah menu bila sediakan kedai baru.

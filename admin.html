@@ -503,7 +503,7 @@ const ADMIN = {
     rewards: "rumangopi-rewards-v1",
     settings: "rumangopi-settings-v1",
     vouchers: "rumangopi-vouchers-v1",
-    menu: "rumangopi-menu-v1",
+    menu: "rumangopi-menu-v2",
     orders: "rumangopi-orders-v1",
   },
   tiers: [{name:"Silver",min:0},{name:"Gold",min:1000},{name:"Platinum",min:2000}],
@@ -519,13 +519,13 @@ const ADMIN = {
   demoCustomer: () => ({
     name:"Aisyah Rahman", memberId:"001234567890", points:1250, lifetime:1250, stamps:7, redeemed:12,
     history:[
-      { ts:Date.now()-864e5*0,  t:"Latte ais",       p:20 },
+      { ts:Date.now()-864e5*0,  t:"Ice Latte",       p:20 },
       { ts:Date.now()-864e5*6,  t:"Diskaun RM5",     p:-300 },
-      { ts:Date.now()-864e5*9,  t:"Kopi Ruma Signature", p:20 },
-      { ts:Date.now()-864e5*15, t:"Teh tarik ais",   p:20 },
+      { ts:Date.now()-864e5*9,  t:"Spanish Latte", p:20 },
+      { ts:Date.now()-864e5*15, t:"Thai Tea",   p:20 },
     ], notif:true, offline:true,
   }),
-  drinks: ["Latte ais","Kopi Ruma Signature","Teh tarik ais","Coklat ais","Matcha latte","Americano","Kopi susu","Milo dinosaur","Bandung soda","Caramel latte"],
+  drinks: ["Ice Latte","Spanish Latte","Gula Aren","Salted Caramel","Mocha","Caramel Machiato","Oreo Choco","Ice Chocolate","Strawberry Milk","Thai Tea","Green Tea"],
 };
 const WORDMARK = document.querySelector("#login img.wm").src;
 
@@ -648,10 +648,10 @@ let MENU=[], ORDERS=[];
 function seedOrders(){
   const m=DB.members, now=Date.now();
   return [
-    {no:"A102",ts:now-6*60e3,memberId:m[3].id,name:m[3].name,status:"Baru",total:19.90,items:[
-      {name:"Kopi Ruma Signature",opts:"Large, Kurang ais, Boba ×2",price:14.90},{name:"Roti Bakar",opts:"Mentega kaya",price:5.00}]},
-    {no:"A101",ts:now-14*60e3,memberId:m[7].id,name:m[7].name,status:"Disediakan",total:14.70,items:[
-      {name:"Oden Set",opts:"Fish ball ×3, Fucuk ×1, Sosej ×1 · Kuah tom yam",price:14.70}]},
+    {no:"A102",ts:now-6*60e3,memberId:m[3].id,name:m[3].name,status:"Baru",total:15.00,items:[
+      {name:"Spanish Latte",opts:"Large, Extra shot ×1",price:7.00},{name:"Oreo Choco",opts:"Regular, Whip cream ×1",price:8.00}]},
+    {no:"A101",ts:now-14*60e3,memberId:m[7].id,name:m[7].name,status:"Disediakan",total:12.00,items:[
+      {name:"Gula Aren",opts:"Large, Cheese foam ×1",price:8.00},{name:"Thai Tea",opts:"Regular",price:4.00}]},
   ];
 }
 const saveMenu=()=>write(ADMIN.keys.menu,MENU);
@@ -1027,7 +1027,7 @@ function renderDraft(){
   box.innerHTML=`
     <h2>${draftIsNew?"Produk baru":"Edit produk"}</h2><p class="sub">Perubahan muncul dalam app pelanggan selepas disimpan.</p>
     <div class="grid g2" style="gap:0 12px">
-      <label class="field"><span>Nama</span><input class="input" data-pf="name" value="${esc(draft.name)}" maxlength="40" placeholder="cth. Oden Set"></label>
+      <label class="field"><span>Nama</span><input class="input" data-pf="name" value="${esc(draft.name)}" maxlength="40" placeholder="cth. Spanish Latte"></label>
       <label class="field"><span>Harga asas (RM)</span><input class="input mono" type="number" min="0" step="0.10" data-pf="price" value="${Number(draft.price).toFixed(2)}"></label>
       <label class="field"><span>Kategori</span><input class="input" data-pf="cat" value="${esc(draft.cat||"")}" list="catList"><datalist id="catList">${cats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist></label>
       <label class="field"><span>Penerangan</span><input class="input" data-pf="desc" value="${esc(draft.desc||"")}" maxlength="60"></label>
