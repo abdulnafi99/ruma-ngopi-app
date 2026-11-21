@@ -18,7 +18,9 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - **App pelanggan → Order → Menu**: kategori, produk, add-on dan troli. Setiap item dalam pesanan beri **1 cap** dan point ikut tetapan.
 - **Add-on "pilih banyak + kuantiti"**: setiap pilihan ada **had kuantiti per item** (contohnya Whip cream maks 1, Extra shot maks 2), dan kumpulan boleh ada had jumlah. Bila had dicapai, pelanggan diberitahu untuk tambah item yang sama ke troli sekali lagi.
 - **Add-on "pilih satu"**: radio, boleh jadi wajib (contohnya Saiz Regular / Large +RM1).
-- **Admin → Menu & add-on**: tambah atau edit produk, kumpulan add-on, harga tambahan, had kuantiti, dan aktif/sembunyi.
+- **Admin → Menu & add-on** ada dua bahagian:
+  - **Item menu**: tambah atau edit produk (nama, harga, kategori, ikon, kumpulan add-on khusus) dan aktif/sembunyi.
+  - **Add-on**: senarai semua kumpulan add-on (cth. Saiz, Add On) yang dikongsi antara item. Edit sekali (nama pilihan, harga, had, aktif) dan perubahan dikenakan pada semua item yang dipilih. Pilih item satu per satu atau ikut kategori; tambah/padam add-on untuk banyak item sekaligus.
 - **Admin → Pesanan**: pesanan masuk secara langsung, dengan status Baru → Disediakan → Siap diambil → Selesai. Pelanggan dapat notis bila pesanan siap.
 - **Menu asal setiap kedai ada dalam `menu.js`.** Itu satu-satunya tempat untuk ubah menu bila sediakan kedai baru.
 
@@ -38,6 +40,8 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - Notifikasi push dihantar kepada pelanggan bila pesanan diterima atau ditolak.
 
 ## Admin dashboard (`admin.html`, demo)
+Navigasi di **sidebar**. Di telefon, sidebar dibuka dengan butang ☰ di atas dan tertutup bila pilih menu atau tekan di luar. Di desktop, sidebar boleh disorok (butang di sebelah logo) dan pilihan itu diingat.
+
 Buka `/admin` atau `admin.html` dan masukkan PIN demo **1234**.
 - **Ringkasan**: KPI (ahli, pembelian hari ini, point dikeluarkan, tebusan), carta pembelian 14 hari, ganjaran popular, aktiviti terkini dan ahli teratas.
 - **Kaunter**: imbas QR pelanggan dengan kamera (BarcodeDetector, atau jsQR sebagai fallback) atau taip ID ahli. Kemudian rekod pembelian (+cap, +point), tebus kad cap penuh, tebus ganjaran, dan sahkan kod baucar.
