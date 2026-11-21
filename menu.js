@@ -1,7 +1,7 @@
 /* =========================================================
    MENU ASAL KEDAI — dikongsi oleh index.html (pelanggan) dan admin.html.
    Ubah fail ini untuk kedai baru. Admin boleh ubah lagi dari dashboard
-   (perubahan admin disimpan dalam localStorage "farha-menu-v1").
+   (perubahan admin disimpan dalam localStorage "rumangopi-menu-v1").
 
    Jenis kumpulan add-on:
      type:"single" → pilih satu (radio). required:true = wajib.
@@ -10,8 +10,8 @@
                      Kumpulan ada `max` = had jumlah semua pilihan (0 = tiada had).
      Nak lebih dari had? Pelanggan tambah item yang sama ke troli sekali lagi.
    ========================================================= */
-window.FARHA_MENU = [
-  { id:"sig", name:"Farha Signature", desc:"Teh susu gula hangus, krim lembut", price:9.90, cat:"Minuman", icon:"cup", active:true, groups:[
+window.RUMANGOPI_MENU = [
+  { id:"sig", name:"Kopi Ruma Signature", desc:"Teh susu gula hangus, krim lembut", price:9.90, cat:"Minuman", icon:"cup", active:true, groups:[
     { id:"size", name:"Saiz", type:"single", required:true, options:[{id:"r",name:"Regular",price:0,active:true},{id:"l",name:"Large",price:2,active:true}] },
     { id:"ice",  name:"Ais",  type:"single", required:true, options:[{id:"n",name:"Ais normal",price:0,active:true},{id:"k",name:"Kurang ais",price:0,active:true},{id:"t",name:"Tiada ais",price:0,active:true}] },
     { id:"top",  name:"Topping", type:"multi", max:3, options:[{id:"boba",name:"Boba",price:1.5,max:2,active:true},{id:"cheese",name:"Cheese foam",price:2,max:1,active:true},{id:"jelly",name:"Jelly kelapa",price:1,max:2,active:true}] },
