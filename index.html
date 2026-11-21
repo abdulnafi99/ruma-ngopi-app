@@ -601,15 +601,15 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
           <div class="row"><svg class="i" data-ic="bell"></svg><div class="txt"><b>Notifikasi push</b><span>Cap, promo &amp; ganjaran</span></div><button class="switch" data-toggle="notif" aria-label="Notifikasi"></button></div>
           <div class="row"><svg class="i" data-ic="wifiOff"></svg><div class="txt"><b>Simpan untuk luar talian</b><span>Pas &amp; sejarah dalam peranti</span></div><button class="switch" data-toggle="offline" aria-label="Luar talian"></button></div>
           <div class="row"><svg class="i" data-ic="refresh"></svg><div class="txt"><b>Versi app</b><span id="p-ver">v1.0 · terkini</span></div><span class="tag-mono">PWA</span></div>
-          <button class="row" data-action="logout"><svg class="i" data-ic="logout"></svg><div class="txt"><b>Log keluar</b></div><svg class="i" data-ic="chev" style="width:18px"></svg></button>
+          <button class="row" data-action="logout" id="logoutRow"><svg class="i" data-ic="logout"></svg><div class="txt"><b>Log keluar</b></div><svg class="i" data-ic="chev" style="width:18px"></svg></button>
         </div>
-        <div class="tile span2 list rose">
+        <div class="tile span2 list rose" id="demoTile">
           <button class="row" data-action="demoBuy"><svg class="i" data-ic="cup"></svg><div class="txt"><b>Simulasi pembelian</b><span>+1 cap &amp; +20 point (mod demo)</span></div><svg class="i" data-ic="chev" style="width:18px"></svg></button>
           <button class="row" data-action="reset"><svg class="i" data-ic="refresh"></svg><div class="txt"><b>Set semula data demo</b><span>Kembali ke data asal</span></div><svg class="i" data-ic="chev" style="width:18px"></svg></button>
           <a class="row" href="admin.html" target="_blank" rel="noopener"><svg class="i" data-ic="chart"></svg><div class="txt"><b>Admin dashboard</b><span>Kaunter staf &amp; laporan (demo · PIN 1234)</span></div><svg class="i" data-ic="chev" style="width:18px"></svg></a>
         </div>
       </div>
-      <p class="demo-note">Data disimpan dalam peranti (localStorage). Sambung ke backend anda untuk produksi.</p>
+      <p class="demo-note" id="demoNote">Data disimpan dalam peranti (localStorage). Sambung ke backend anda untuk produksi.</p>
     </section>
   </main>
 
@@ -631,6 +631,7 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="firebase-config.js"></script>
 <script src="menu.js"></script>
 <script src="shop.js"></script>
 <script>
@@ -790,9 +791,17 @@ function applyShared(){
   try{ const r=JSON.parse(localStorage.getItem(SHARED.rewards)); CONFIG.rewards = (Array.isArray(r)&&r.length) ? r.filter(x=>x.active!==false) : DEFAULT_REWARDS; }catch(e){}
   try{ const st=JSON.parse(localStorage.getItem(SHARED.settings)); if(st){ if(st.stampTarget) CONFIG.stampTarget=+st.stampTarget; if(st.pointsPerPurchase) CONFIG.pointsPerPurchase=+st.pointsPerPurchase; } }catch(e){}
 }
+const LIVE = !!(window.RN && window.RN.LIVE);
+function newMemberId(){
+  const a = new Uint32Array(3); crypto.getRandomValues(a);
+  return Array.from(a, x => String(x % 10000).padStart(4,"0")).join("");
+}
+const freshMember = () => ({ name:"", memberId:newMemberId(), points:0, lifetime:0, stamps:0, redeemed:0, history:[], notif:true, offline:true, joined:Date.now() });
 function load(){
   try{ S = JSON.parse(localStorage.getItem(CONFIG.storageKey)); }catch(e){ S=null; }
-  if(!S) S = structuredClone(CONFIG.demoUser);
+  if(LIVE){ if(!S || !S.memberId || S.memberId===CONFIG.demoUser.memberId) S = freshMember(); }
+  else if(!S) S = structuredClone(CONFIG.demoUser);
+  if(!Array.isArray(S.history)) S.history = [];
 }
 function save(){ try{ localStorage.setItem(CONFIG.storageKey, JSON.stringify(S)); }catch(e){} }
 
@@ -1001,10 +1010,11 @@ function demoBuy(){
   if(S.stamps>=CONFIG.stampTarget) confetti();
 }
 function editName(){
+  const isNew = !S.name;
   openSheet(`
-    <h2>Kemas kini profil</h2>
-    <p>Nama ini dipaparkan pada kad ahli anda.</p>
-    <input class="input" id="nameIn" maxlength="40" value="${esc(S.name)}" autocomplete="name">
+    <h2>${isNew ? `Selamat datang ke ${esc(CONFIG.brand)}!` : "Kemas kini profil"}</h2>
+    <p>${isNew ? "Masukkan nama anda untuk kad ahli. Setiap pesanan beri cap &amp; point." : "Nama ini dipaparkan pada kad ahli anda."}</p>
+    <input class="input" id="nameIn" maxlength="40" value="${esc(S.name)}" autocomplete="name" placeholder="Nama anda">
     <div class="btn-row"><button class="btn ghost" data-action="close">Batal</button><button class="btn red" data-action="saveName">Simpan</button></div>`);
   setTimeout(()=>$("#nameIn")?.focus(),350);
 }
@@ -1199,17 +1209,23 @@ $("#sheetBody").addEventListener("change", e=>{
   if(e.target.id==="ckTime") ckTime=e.target.value;
   if(e.target.name==="ckPay") ckPay=e.target.value;
 });
-function placeOrder(){
-  if(!cart.length) return;
+let placing = false;
+async function placeOrder(){
+  if(!cart.length || placing) return;
   SHOP=SHOPX.load(); const st=shopState();
   if(!st.open){ toast(`Kedai ${st.label.toLowerCase()}`); openCart(); return; }
+  if(LIVE && window.RN.status!=="live"){ toast("Tiada sambungan ke kedai. Semak internet dan cuba lagi."); return; }
   const opt=pickupOptions(st.sl).find(o=>o[0]===ckTime) || pickupOptions(st.sl)[0];
   const pickup={ label: opt[0]==="asap" ? "Secepat mungkin" : opt[1], at: opt[0]==="asap" ? null : +opt[0] };
   const pay = ckPay==="DuitNow" && SHOP.qr ? "DuitNow" : "Kaunter";
   const n=cart.length, P=CONFIG.pointsPerPurchase, total=+cartTotal().toFixed(2);
   let orders=[]; try{ orders=JSON.parse(localStorage.getItem(SHARED.orders)||"[]"); }catch(e){}
-  const no="A"+String(100+orders.length+1).slice(-3);
-  const order={no,ts:Date.now(),memberId:S.memberId,name:S.name,items:cart.map(c=>({name:c.name,opts:c.opts,price:c.price})),total,status:"Baru",pickup,pay};
+  placing = true; $$('[data-action="placeOrder"]').forEach(b=>{ b.disabled=true; b.textContent="Menghantar…"; });
+  let no;
+  try{ no = window.RN?.nextOrderNo ? await window.RN.nextOrderNo() : "A"+String(100+orders.length+1).slice(-3); }
+  finally{ placing = false; }
+  try{ orders=JSON.parse(localStorage.getItem(SHARED.orders)||"[]"); }catch(e){ orders=[]; }
+  const order={no,ts:Date.now(),memberId:S.memberId,name:S.name||"Ahli",items:cart.map(c=>({name:c.name,opts:c.opts,price:c.price})),total,status:"Baru",pickup,pay};
   orders.unshift(order); try{ localStorage.setItem(SHARED.orders,JSON.stringify(orders.slice(0,200))); }catch(e){}
   knownStatus[no]="Baru";
   S.points+=n*P; S.lifetime+=n*P; S.stamps=Math.min(CONFIG.stampTarget,S.stamps+n);
@@ -1285,7 +1301,19 @@ document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeSheet(); });
 setInterval(()=>{ SHOP=SHOPX.load(); renderShopbar(); }, 60e3);
 
 /* Status rangkaian */
-function net(){ const on=navigator.onLine; $("#h-net").textContent=on?"Disegerak":"Luar talian"; $("#h-net-dot").style.background=on?"var(--ok)":"#E0A100"; }
+function net(){
+  const st = LIVE ? window.RN.status : (navigator.onLine ? "live" : "offline");
+  const on = navigator.onLine && st !== "offline";
+  $("#h-net").textContent = !navigator.onLine ? "Luar talian" : st==="connecting" ? "Menyambung…" : on ? "Disegerak" : "Luar talian";
+  $("#h-net-dot").style.background = on && st!=="connecting" ? "var(--ok)" : "#E0A100";
+}
+if(LIVE){
+  window.RN.on("status", ()=>net());
+  window.RN.on("error", e=>toast(/PERMISSION_DENIED|permission/i.test(e.code) ? "Kedai belum benarkan sambungan. Sila maklumkan kepada staf." : `${e.what} gagal. Cuba lagi.`));
+  $("#demoTile").style.display="none";
+  $("#logoutRow").style.display="none";
+  $("#demoNote").textContent="Kad ahli anda disimpan dalam peranti ini dan disegerak dengan RumaNgopi.";
+}
 addEventListener("online",net); addEventListener("offline",net);
 
 /* Segerak langsung bila admin.html (tab lain) ubah data */
@@ -1302,7 +1330,7 @@ addEventListener("storage", e=>{
       if(o.memberId===S.memberId && knownStatus[o.no] && knownStatus[o.no]!==o.status){
         toast(o.status==="Siap diambil" ? `Pesanan #${o.no} siap! Sila ambil di kaunter` : `Pesanan #${o.no}: ${o.status}`);
         if(navigator.vibrate) navigator.vibrate([30,60,30]);
-        if($("#orderView")?.dataset.no===o.no) showOrder(o.no);
+        if($("#sheet").classList.contains("show") && $("#orderView")?.dataset.no===o.no) showOrder(o.no);
       }
       knownStatus[o.no]=o.status;
     }); }catch(_){}
@@ -1343,6 +1371,7 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 function endSplash(){
   const sp=$("#splash"); if(!sp||sp.classList.contains("out")) return;
   sp.classList.add("out"); $("#app").classList.add("enter");
+  if(LIVE && !S.name) setTimeout(()=>{ if(!S.name && !$("#sheet").classList.contains("show")) editName(); }, 700);
   setTimeout(()=>{ sp.remove(); $("#app").classList.remove("enter"); }, 900);
 }
 

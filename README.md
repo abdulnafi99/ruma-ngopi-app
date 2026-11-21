@@ -44,6 +44,9 @@ index.html             ← app pelanggan: SEMUA UI, CSS & JS (logo dibenam base6
 admin.html             ← dashboard admin & kaunter staf (satu fail, demo)
 menu.js                ← menu asal kedai (produk & add-on), dikongsi kedua-dua halaman
 shop.js                ← alamat, DuitNow QR & waktu pickup (logik slot), dikongsi kedua-dua halaman
+firebase-config.js     ← config Firebase + lapisan segerak localStorage ↔ Firebase
+firebase-sync.js       ← sambungan Realtime Database, Auth & Analytics
+database.rules.json    ← rules keselamatan Realtime Database (salin ke console)
 vercel.json            ← laluan /admin
 manifest.webmanifest   ← maklumat PWA (nama, warna, ikon)
 sw.js                  ← service worker (cache luar talian)
@@ -66,6 +69,35 @@ Untuk deploy, muat naik folder ini ke mana-mana hosting statik (Vercel, Netlify,
    - Splash: teks dalam `.sp-word` dan cawan SVG dalam `.sp-cup`. Tempoh loading bar = `DUR` dalam fungsi `splashLoader()`.
 4. **Manifest**: kemas kini `name`, `short_name` dan `theme_color` dalam `manifest.webmanifest`.
 5. Naikkan `VERSION` dalam `sw.js` setiap kali anda deploy versi baru.
+
+## Firebase Realtime Database (mod live)
+App disambung ke projek Firebase **rumangopi-app** (`firebase-config.js`). Semua peranti berkongsi data secara langsung:
+
+| Path | Isi | Siapa tulis |
+|---|---|---|
+| `store/menu`, `store/rewards`, `store/settings`, `store/shop` | menu, ganjaran, tetapan cap/point, alamat, QR DuitNow, waktu pickup | admin |
+| `members/{memberId}` | kad ahli (nama, point, cap, sejarah) | pelanggan & kaunter |
+| `orders/{no}` | pesanan pickup | pelanggan (cipta), admin (status) |
+| `vouchers/{code}` | baucar ganjaran | pelanggan (cipta), admin (sahkan) |
+| `counters/orderNo` | nombor pesanan seterusnya (A101, A102…) | automatik |
+| `admins/{uid}` | `true` untuk akaun yang boleh ubah `store/*` | anda, di console |
+
+**Cara ia berfungsi:** app masih guna `localStorage`. `firebase-config.js` memintas tulisan pada kunci yang dikongsi dan hantar ke Firebase (`firebase-sync.js`). Data dari Firebase ditulis semula ke `localStorage` dan app dimaklumkan melalui event `storage`.
+
+**Mod live berbanding demo:**
+- Setiap telefon dapat kad ahli baru (ID 12 digit) dan diminta nama. Butang demo (simulasi pembelian, set semula, log keluar) disembunyikan.
+- Admin log masuk dengan **emel & kata laluan Firebase** (bukan PIN).
+- Tiada sambungan internet: pelanggan masih boleh lihat kad & menu, tetapi tidak boleh buat pesanan.
+- Untuk kembali ke mod demo, buang `<script src="firebase-config.js">` dari `index.html` dan `admin.html`.
+
+### Setup di Firebase Console (sekali sahaja)
+1. **Authentication → Sign-in method**: hidupkan **Anonymous** dan **Email/Password**.
+2. **Authentication → Users → Add user**: cipta akaun admin (emel + kata laluan).
+3. **Realtime Database → Rules**: salin isi `database.rules.json`, kemudian **Publish**.
+4. Log masuk ke `/admin`, salin **UID admin** dari Tetapan, kemudian di **Realtime Database → Data** tambah `admins` → `<UID>` = `true`.
+5. **Authentication → Settings → Authorized domains**: pastikan domain Vercel (`ruma-ngopi-app.vercel.app`) ada.
+
+> Nota keselamatan: point & cap dikira dalam app (bukan server), jadi pelanggan yang mahir teknikal boleh ubah kad sendiri. Untuk perlindungan penuh, pindahkan pengiraan point ke Cloud Functions.
 
 ## Sambung ke backend
 Template ini menyimpan data secara tempatan sahaja. Untuk produksi, gantikan fungsi `load()`, `save()`, `doRedeem()` dan `demoBuy()` dengan panggilan API ke backend anda (contohnya Firebase atau Supabase), dan buang bahagian "mod demo" di skrin Profil.

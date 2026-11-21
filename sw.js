@@ -1,7 +1,7 @@
 /* Service worker — cache app shell supaya boleh dibuka luar talian.
    Naikkan VERSION setiap kali anda kemas kini index.html. */
-const VERSION = "rumangopi-v2.3.0";
-const SHELL = ["./", "./index.html", "./admin.html", "./menu.js", "./shop.js", "./manifest.webmanifest",
+const VERSION = "rumangopi-v3.0.0";
+const SHELL = ["./", "./index.html", "./admin.html", "./menu.js", "./shop.js", "./firebase-config.js", "./firebase-sync.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/logo-circle.png"];
 
 self.addEventListener("install", e => {
@@ -22,7 +22,7 @@ self.addEventListener("fetch", e => {
     return;
   }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
-    if (r.ok && (req.url.startsWith(self.location.origin) || req.url.includes("fonts.g"))) {
+    if (r.ok && (req.url.startsWith(self.location.origin) || req.url.includes("fonts.g") || req.url.includes("gstatic.com/firebasejs/"))) {
       const copy = r.clone(); caches.open(VERSION).then(c => c.put(req, copy));
     }
     return r;
