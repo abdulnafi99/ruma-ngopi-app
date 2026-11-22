@@ -1,21 +1,21 @@
 # RumaNgopi Rewards — Loyalty & Order PWA
 
-Kad loyalti digital (cup + point + ganjaran) dalam gaya **Bento Glass Frost**, tema **coklat kopi & mocha RumaNgopi** (ikut warna logo: `#5C3E33` coklat, `#D5C2BC` mocha).
+Kad loyalti digital (cop + point + ganjaran) dalam gaya **Bento Glass Frost**, tema **coklat kopi & mocha RumaNgopi** (ikut warna logo: `#5C3E33` coklat, `#D5C2BC` mocha).
 Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `index.html`. Tiada framework dan tiada langkah build.
 
 ## Ciri-ciri
 - **Splash screen beranimasi**: perkataan **rumaNgopi** keluar huruf demi huruf, cawan kopi dilukis garisan demi garisan (wap, pemegang hati), kemudian **loading bar** dengan peratus di bawah.
-- **5 skrin**: Home · **Order** · Cup & Point · Ganjaran · Profil, dengan bottom nav berbentuk pil.
+- **5 skrin**: Home · **Order** · Cop & Point · Ganjaran · Profil, dengan bottom nav berbentuk pil.
 - **Tab Order**: dua bahagian, **Menu** (pilih item + add-on + troli) dan **Pesanan saya** (pesanan aktif dengan status langsung + sejarah). Titik pada ikon Order bila ada pesanan aktif.
 - **Kod QR ahli yang boleh diimbas betul-betul**, dijana dalam JS tanpa library (format: `RUMANGOPI:<memberId>`).
-- **Kad cup 10 petak**: bila penuh, petak hadiah boleh ditekan untuk tebus minuman percuma.
+- **Kad cop 10 petak**: bila penuh, petak hadiah boleh ditekan untuk tebus minuman percuma.
 - **Tebus ganjaran**: point ditolak, keluar kod baucar 6 aksara dengan pemasa 10 minit, dan animasi konfeti.
 - **Tahap ahli** (Silver / Gold / Platinum) ikut jumlah point terkumpul.
 - **PWA**: boleh dipasang ke skrin utama (Android & iOS) dan dibuka luar talian melalui service worker.
 - **Mod demo**: butang "Simulasi pembelian" dan "Set semula data". Data disimpan dalam `localStorage`.
 
 ## Menu, add-on & troli
-- **App pelanggan → Order → Menu**: kategori, produk, add-on dan troli. Setiap item dalam pesanan beri **1 cup** dan point ikut tetapan.
+- **App pelanggan → Order → Menu**: kategori, produk, add-on dan troli. Setiap item dalam pesanan beri **1 cop** dan point ikut tetapan.
 - **Add-on "pilih banyak + kuantiti"**: setiap pilihan ada **had kuantiti per item** (contohnya Whip cream maks 1, Extra shot maks 2), dan kumpulan boleh ada had jumlah. Bila had dicapai, pelanggan diberitahu untuk tambah item yang sama ke troli sekali lagi.
 - **Add-on "pilih satu"**: radio, boleh jadi wajib (contohnya Saiz Regular / Large +RM1).
 - **Harga penuh** (kumpulan pilih satu): hidupkan bila harga pilihan ialah harga sebenar minuman (cth. Saiz: Regular RM5, Large RM6). Harga asas item diabaikan, jadi tiada kira dua kali. Admin diberi amaran semasa simpan jika harga pilihan nampak macam harga penuh tetapi suis belum dihidupkan. Kad menu pelanggan tunjuk "dari RM5.00".
@@ -41,7 +41,7 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 ## Terima / tolak pesanan & bukti bayaran DuitNow
 - Pesanan baru masuk dengan status **"Perlu disemak"** (pelanggan nampak *Menunggu pengesahan*).
 - Admin tekan kad pesanan untuk **pratonton**: pelanggan & no telefon, masa pesan, pickup, item, jumlah dan bukti bayaran. Kemudian **Terima** atau **Tolak** (dengan sebab; ada pilihan cepat seperti "Item habis", "Bukti bayaran tidak sah").
-- **Terima** → status *Disediakan* dan **cup & point diberi kepada pelanggan ketika ini** (bukan semasa pesan). **Tolak** → status *Ditolak*, tiada point; pelanggan nampak sebab dan (untuk DuitNow) makluman bayaran akan dipulangkan.
+- **Terima** → status *Disediakan* dan **cop & point diberi kepada pelanggan ketika ini** (bukan semasa pesan). **Tolak** → status *Ditolak*, tiada point; pelanggan nampak sebab dan (untuk DuitNow) makluman bayaran akan dipulangkan.
 - Pelanggan yang pilih **DuitNow QR** wajib **muat naik screenshot resit** sebelum boleh hantar pesanan. Gambar dikecilkan dan disimpan di `proofs/{no}` (hanya pemilik pesanan & admin boleh lihat).
 - Notifikasi push dihantar kepada pelanggan bila pesanan diterima atau ditolak.
 
@@ -50,12 +50,12 @@ Navigasi di **sidebar**. Di telefon, sidebar dibuka dengan butang ☰ di atas da
 
 Buka `/admin` atau `admin.html` dan masukkan PIN demo **1234**.
 - **Ringkasan**: KPI (ahli, pembelian hari ini, point dikeluarkan, tebusan), carta pembelian 14 hari, ganjaran popular, aktiviti terkini dan ahli teratas.
-- **Kaunter**: imbas QR pelanggan dengan kamera (BarcodeDetector, atau jsQR sebagai fallback) atau taip ID ahli. Kemudian rekod pembelian (+cup, +point), tebus kad cup penuh, tebus ganjaran, dan sahkan kod baucar.
+- **Kaunter**: imbas QR pelanggan dengan kamera (BarcodeDetector, atau jsQR sebagai fallback) atau taip ID ahli. Kemudian rekod pembelian (+cop, +point), tebus kad cop penuh, tebus ganjaran, dan sahkan kod baucar.
 - **Ahli**: cari, tapis ikut tahap, susun. Lihat butiran dan sejarah, laraskan point, eksport CSV.
 - **Ganjaran**: tambah, edit (nama, penerangan, kos point, ikon), padam, aktif/sembunyi, **susun semula (▲▼)**, dan pilih ganjaran utama. Perubahan terus muncul dalam app pelanggan. Mesti ada sekurang-kurangnya satu ganjaran (sembunyikan jika tidak mahu dipaparkan).
-- **Tetapan**: bilangan cup untuk kad penuh, point setiap item, dan **nama ganjaran kad cup** (cth. Minuman Percuma).
+- **Tetapan**: bilangan cop untuk kad penuh, point setiap item, dan **nama ganjaran kad cop** (cth. Minuman Percuma).
 
-**Segerak demo:** admin dan app pelanggan berkongsi `localStorage` dalam pelayar yang sama. Buka `index.html` dan `admin.html` dalam dua tab sebelah-menyebelah. Cup yang ditambah di kaunter terus muncul dalam app pelanggan, dan baucar yang disahkan staf terus bertukar jadi "✓ Telah ditebus di kaunter". Ahli lain dalam dashboard adalah data contoh. Untuk segerak antara peranti, sambung ke Firebase.
+**Segerak demo:** admin dan app pelanggan berkongsi `localStorage` dalam pelayar yang sama. Buka `index.html` dan `admin.html` dalam dua tab sebelah-menyebelah. Cop yang ditambah di kaunter terus muncul dalam app pelanggan, dan baucar yang disahkan staf terus bertukar jadi "✓ Telah ditebus di kaunter". Ahli lain dalam dashboard adalah data contoh. Untuk segerak antara peranti, sambung ke Firebase.
 
 ## Struktur
 ```
@@ -87,7 +87,7 @@ Untuk deploy, muat naik folder ini ke mana-mana hosting statik (Vercel, Netlify,
 ## Jadikan untuk kedai lain (template)
 1. **Warna**: ubah pemboleh ubah `:root` di bahagian atas `<style>` (`--brand`, `--brand-2`, `--brand-deep`, `--blob-*`).
 2. **Menu**: ubah `menu.js` (produk, harga, add-on, had kuantiti).
-3. **Data & ganjaran**: ubah objek `CONFIG` di bahagian atas `<script>`, termasuk nama brand, sasaran cup, senarai ganjaran, tahap ahli dan pengguna demo.
+3. **Data & ganjaran**: ubah objek `CONFIG` di bahagian atas `<script>`, termasuk nama brand, sasaran cop, senarai ganjaran, tahap ahli dan pengguna demo.
 3. **Logo**: ganti `data:image/png;base64,...` pada `<img class="wm">` (header Home & login admin) dengan tanda putih (PNG lutsinar) anda, dan ganti fail dalam `icons/`.
    - Splash: teks dalam `.sp-word` dan cawan SVG dalam `.sp-cup`. Tempoh loading bar = `DUR` dalam fungsi `splashLoader()`.
 4. **Manifest**: kemas kini `name`, `short_name` dan `theme_color` dalam `manifest.webmanifest`.
@@ -98,9 +98,9 @@ App disambung ke projek Firebase **rumangopi-app** (`firebase-config.js`). Semua
 
 | Path | Isi | Siapa tulis |
 |---|---|---|
-| `store/menu`, `store/rewards`, `store/settings`, `store/shop` | menu, ganjaran, tetapan cup/point, alamat, QR DuitNow, waktu pickup | admin |
+| `store/menu`, `store/rewards`, `store/settings`, `store/shop` | menu, ganjaran, tetapan cop/point, alamat, QR DuitNow, waktu pickup | admin |
 | `users/{uid}` | akaun pelanggan → `memberId`, no telefon, nama | pelanggan (sendiri) |
-| `members/{memberId}` | kad ahli (nama, telefon, point, cup, sejarah, `ownerUid`) | pemilik kad & kaunter |
+| `members/{memberId}` | kad ahli (nama, telefon, point, cop, sejarah, `ownerUid`) | pemilik kad & kaunter |
 | `orders/{no}` | pesanan pickup | pelanggan (cipta), admin (status) |
 | `vouchers/{code}` | baucar ganjaran | pelanggan (cipta), admin (sahkan) |
 | `counters/orderNo` | nombor pesanan seterusnya (A101, A102…) | automatik |
@@ -128,7 +128,7 @@ App disambung ke projek Firebase **rumangopi-app** (`firebase-config.js`). Semua
 4. UID admin utama (`cqFIzYAssCX2HIcbdHFMyvbF0q33`) sudah ditulis terus dalam `database.rules.json`. Untuk admin tambahan, di **Realtime Database → Data** tambah `admins` → `<UID>` = `true`.
 5. **Authentication → Settings → Authorized domains**: pastikan domain Vercel (`ruma-ngopi-app.vercel.app`) ada.
 
-> Nota keselamatan: point & cup dikira dalam app (bukan server), jadi pelanggan yang mahir teknikal boleh ubah kad sendiri. Untuk perlindungan penuh, pindahkan pengiraan point ke Cloud Functions.
+> Nota keselamatan: point & cop dikira dalam app (bukan server), jadi pelanggan yang mahir teknikal boleh ubah kad sendiri. Untuk perlindungan penuh, pindahkan pengiraan point ke Cloud Functions.
 
 ## Push notification (admin & pelanggan)
 Web Push melalui fungsi Vercel **`/api/push`** (`api/push.js`, guna `firebase-admin` + `web-push`).
@@ -137,7 +137,7 @@ Web Push melalui fungsi Vercel **`/api/push`** (`api/push.js`, guna `firebase-ad
 |---|---|---|
 | Pelanggan buat pesanan | semua admin (peranti yang hidupkan notifikasi) | "Pesanan baru #A105 · Siti · 2 item · RM 12.00 · Pickup 3:45 PM" |
 | Admin tukar status | pelanggan pesanan itu | "Pesanan #A105 siap! 🎉 Sila ambil di kaunter" |
-| Kaunter rekod pembelian / tebus / laras point | pelanggan itu | "Kad ahli dikemas kini · Pembelian di kaunter (+20 point) · 60 point, 3 cup" |
+| Kaunter rekod pembelian / tebus / laras point | pelanggan itu | "Kad ahli dikemas kini · Pembelian di kaunter (+20 point) · 60 point, 3 cop" |
 
 - **Pelanggan** hidupkan di **Profil → Notifikasi push**, atau butang "Beritahu saya bila pesanan siap" pada resit.
 - **Admin** hidupkan di **Pesanan → Hidupkan notifikasi** atau **Tetapan → Notifikasi push** (ada butang "Hantar ujian").

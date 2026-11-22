@@ -138,7 +138,7 @@ module.exports = async function handler(req, res){
       if(!m || !m.ownerUid) return res.json({ ok: true, sent: 0, note: "no-owner" });
       const text = String(body.text || "").slice(0, 120) || "Kad ahli anda telah dikemas kini.";
       const r = await sendTo(db, [m.ownerUid], "user", {
-        title: "Kad ahli dikemas kini", body: `${text} · ${m.points || 0} point, ${m.stamps || 0} cup`, url: "./index.html#cap", tag: "card" });
+        title: "Kad ahli dikemas kini", body: `${text} · ${m.points || 0} point, ${m.stamps || 0} cop`, url: "./index.html#cap", tag: "card" });
       return res.json({ ok: true, ...r });
     }
 
