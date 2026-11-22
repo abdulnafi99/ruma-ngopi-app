@@ -736,7 +736,8 @@ const CONFIG = {
   brand: "RumaNgopi",
   storageKey: "rumangopi-loyalty-v1",
   stampTarget: 10,                 // bilangan cop untuk 1 minuman percuma
-  pointsPerPurchase: 20,           // point setiap pembelian (demo)
+  pointsPerPurchase: 20,           // point setiap item · walk-in / kaunter
+  pointsPerApp: 20,                // point setiap item · order dari app
   stampReward: "Minuman Percuma",  // ganjaran bila kad cop penuh
   tiers: [                         // ikut jumlah point terkumpul (lifetime)
     { name: "Silver",   min: 0 },
@@ -892,7 +893,7 @@ function applyShared(){
   applyMedia();
   try{ const m=JSON.parse(localStorage.getItem(SHARED.menu)); CONFIG.menu = (Array.isArray(m)&&m.length) ? m : DEFAULT_MENU; }catch(e){}
   try{ const r=JSON.parse(localStorage.getItem(SHARED.rewards)); CONFIG.rewards = (Array.isArray(r)&&r.length) ? r.filter(x=>x&&x.name&&x.active!==false) : DEFAULT_REWARDS; }catch(e){}
-  try{ const st=JSON.parse(localStorage.getItem(SHARED.settings)); if(st){ if(st.stampTarget) CONFIG.stampTarget=+st.stampTarget; if(st.pointsPerPurchase) CONFIG.pointsPerPurchase=+st.pointsPerPurchase; if(st.stampReward) CONFIG.stampReward=String(st.stampReward); } }catch(e){}
+  try{ const st=JSON.parse(localStorage.getItem(SHARED.settings)); if(st){ if(st.stampTarget) CONFIG.stampTarget=+st.stampTarget; if(st.pointsPerPurchase!=null) CONFIG.pointsPerPurchase=+st.pointsPerPurchase; CONFIG.pointsPerApp = st.pointsPerApp!=null && st.pointsPerApp!=="" ? +st.pointsPerApp : CONFIG.pointsPerPurchase; if(st.stampReward) CONFIG.stampReward=String(st.stampReward); } }catch(e){}
 }
 const LIVE = !!(window.RN && window.RN.LIVE);
 function newMemberId(){
@@ -1304,7 +1305,7 @@ function renderCartBar(){
   $("#cartbar").classList.toggle("show", n>0 && !$("#sheet").classList.contains("show"));
   $$(".screen").forEach(s=>s.classList.toggle("has-cart", n>0));
   $("#cb-n").textContent=n; $("#cb-total").textContent=rm2(cartTotal());
-  $("#cb-earn").textContent=`+${Math.min(n,CONFIG.stampTarget)} cop · +${fmt(n*CONFIG.pointsPerPurchase)} point`;
+  $("#cb-earn").textContent=`+${Math.min(n,CONFIG.stampTarget)} cop · +${fmt(n*CONFIG.pointsPerApp)} point`;
   $("#m-cartpill").textContent=`${n} item`;
   void onMenu;
 }
@@ -1372,7 +1373,7 @@ function pickupOptions(st){
 }
 function openCart(){
   if(!cart.length){ openSheet(`<h2>Troli kosong</h2><p>Pilih item dari menu untuk mula pesan.</p><button class="btn block" data-action="close" data-go="menu">Lihat menu</button>`); return; }
-  const n=cart.length, P=CONFIG.pointsPerPurchase;
+  const n=cart.length, P=CONFIG.pointsPerApp;
   openSheet(`
     <h2>Troli anda</h2><p>Pickup sahaja: ambil sendiri di kaunter ${esc(CONFIG.brand)}.</p>
     <div>${cart.map((c,i)=>`<div class="cart-line"><span class="q">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"Tiada pilihan tambahan")}</span></div><span class="pr">${rm2(c.price)}</span><button class="rm" data-rmline="${i}" aria-label="Buang ${esc(c.name)}">${icon("trash","width:17px;height:17px")}</button></div>`).join("")}</div>
@@ -1423,7 +1424,7 @@ async function placeOrder(){
     : pDate ? { label:opt[1], at:+pMin, date:pDate, pre:true } : { label:opt[1], at:+pMin };
   const pay = ckPay==="DuitNow" && SHOP.qr ? "DuitNow" : "Kaunter";
   if(pay==="DuitNow" && !ckProof){ toast("Sila muat naik bukti bayaran DuitNow dahulu"); document.querySelector(".proof-up")?.scrollIntoView({behavior:"smooth",block:"center"}); return; }
-  const n=cart.length, P=CONFIG.pointsPerPurchase, total=+cartTotal().toFixed(2);
+  const n=cart.length, P=CONFIG.pointsPerApp, total=+cartTotal().toFixed(2);
   let orders=[]; try{ orders=JSON.parse(localStorage.getItem(SHARED.orders)||"[]"); }catch(e){}
   placing = true; $$('[data-action="placeOrder"]').forEach(b=>{ b.disabled=true; b.textContent="Menghantar…"; });
   let no;
