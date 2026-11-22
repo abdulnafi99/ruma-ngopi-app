@@ -334,9 +334,14 @@ a.row[hidden]{display:none}
 .prod{display:flex;flex-direction:column;gap:6px;padding:14px;cursor:pointer;text-align:left}
 .prod .pic{aspect-ratio:1.35;border-radius:16px;display:grid;place-items:center;color:#fff;margin-bottom:6px;background:radial-gradient(90% 90% at 0% 0%,rgba(255,255,255,.3),transparent 60%),linear-gradient(160deg,var(--brand-2),var(--brand))}
 .prod .pic.img,.ps-hero .pic.img{padding:0;overflow:hidden;background:#EFE6E2}
-.prod .pic.img img,.ps-hero .pic.img img{width:100%;height:100%;object-fit:cover;display:block}
+/* Gambar item dipapar penuh (contain) atas latar kabur gambar yang sama: tiada bahagian terpotong */
+.pic.img{position:relative;isolation:isolate}
+.pic.img img{width:100%;height:100%;display:block}
+.pic.img img.fg{object-fit:contain;position:absolute;inset:0;z-index:1}
+.pic.img img.bg{position:absolute;inset:-14%;width:128%;height:128%;object-fit:cover;filter:blur(20px) saturate(1.15);opacity:.6;transform:scale(1.05)}
 .ps-hero.big{flex-direction:column;align-items:stretch;gap:12px}
-.ps-hero.big .pic{width:100%;height:auto;aspect-ratio:1.6;border-radius:20px}
+.ps-hero.big .pic{width:100%;height:auto;border-radius:22px;display:flex;justify-content:center;max-height:min(60vh,560px)}
+.ps-hero.big .pic img.fg{position:relative;inset:auto;width:auto;max-width:100%;height:auto;max-height:min(60vh,560px)}
 /* ---------- Banner promosi 1:1 ---------- */
 .promo{position:relative;padding:0!important;overflow:hidden;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .promo-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:var(--radius);gap:10px}
@@ -736,7 +741,8 @@ const CONFIG = {
   brand: "RumaNgopi",
   storageKey: "rumangopi-loyalty-v1",
   stampTarget: 10,                 // bilangan cop untuk 1 minuman percuma
-  pointsPerPurchase: 20,           // point setiap pembelian (demo)
+  pointsPerPurchase: 20,           // point setiap item · walk-in / kaunter
+  pointsPerApp: 20,                // point setiap item · order dari app
   stampReward: "Minuman Percuma",  // ganjaran bila kad cop penuh
   tiers: [                         // ikut jumlah point terkumpul (lifetime)
     { name: "Silver",   min: 0 },
@@ -892,7 +898,7 @@ function applyShared(){
   applyMedia();
   try{ const m=JSON.parse(localStorage.getItem(SHARED.menu)); CONFIG.menu = (Array.isArray(m)&&m.length) ? m : DEFAULT_MENU; }catch(e){}
   try{ const r=JSON.parse(localStorage.getItem(SHARED.rewards)); CONFIG.rewards = (Array.isArray(r)&&r.length) ? r.filter(x=>x&&x.name&&x.active!==false) : DEFAULT_REWARDS; }catch(e){}
-  try{ const st=JSON.parse(localStorage.getItem(SHARED.settings)); if(st){ if(st.stampTarget) CONFIG.stampTarget=+st.stampTarget; if(st.pointsPerPurchase) CONFIG.pointsPerPurchase=+st.pointsPerPurchase; if(st.stampReward) CONFIG.stampReward=String(st.stampReward); } }catch(e){}
+  try{ const st=JSON.parse(localStorage.getItem(SHARED.settings)); if(st){ if(st.stampTarget) CONFIG.stampTarget=+st.stampTarget; if(st.pointsPerPurchase!=null) CONFIG.pointsPerPurchase=+st.pointsPerPurchase; CONFIG.pointsPerApp = st.pointsPerApp!=null && st.pointsPerApp!=="" ? +st.pointsPerApp : CONFIG.pointsPerPurchase; if(st.stampReward) CONFIG.stampReward=String(st.stampReward); } }catch(e){}
 }
 const LIVE = !!(window.RN && window.RN.LIVE);
 function newMemberId(){
@@ -1227,7 +1233,7 @@ function renderMenu(){
   const list=items.filter(p=>menuCat==="Semua"||(p.cat||"Lain-lain")===menuCat);
   $("#m-grid").innerHTML=list.map((p,i)=>`
     <button class="tile prod" data-prod="${p.id}">
-      ${imgOf(p) ? `<div class="pic img"><img src="${imgOf(p)}" alt="" loading="lazy" decoding="async"></div>` : `<div class="pic"${picStyle(p)}>${icon(p.icon||"cup")}</div>`}
+      ${imgOf(p) ? `<div class="pic img"><img class="bg" src="${imgOf(p)}" alt="" aria-hidden="true" loading="lazy" decoding="async"><img class="fg" src="${imgOf(p)}" alt="" loading="lazy" decoding="async"></div>` : `<div class="pic"${picStyle(p)}>${icon(p.icon||"cup")}</div>`}
       <b>${esc(p.name)}</b><span class="sub">${esc(p.desc||"")}</span>
       <div class="row2"><span class="pr">${(f=>`${f.from?'<small style="font-weight:500;font-size:10.5px">dari </small>':""}${rm2(f.v)}`)(fromPrice(p))}</span><span class="plus">${icon("plus")}</span></div>
     </button>`).join("") || `<div class="tile span2 empty">Tiada item dalam kategori ini</div>`;
@@ -1272,7 +1278,7 @@ function renderProduct(){
       ${full?`<p class="grp-full">Had ${g.max} pilihan dicapai untuk item ini.</p>`:""}</div>`;
   }).join("");
   box.innerHTML=`
-    ${imgOf(p) ? `<div class="ps-hero big"><div class="pic img"><img src="${imgOf(p)}" alt="${esc(p.name)}"></div><div><h2>${esc(p.name)}</h2><p>${esc(p.desc||"")}</p></div></div>`
+    ${imgOf(p) ? `<div class="ps-hero big"><div class="pic img"><img class="bg" src="${imgOf(p)}" alt="" aria-hidden="true"><img class="fg" src="${imgOf(p)}" alt="${esc(p.name)}"></div><div><h2>${esc(p.name)}</h2><p>${esc(p.desc||"")}</p></div></div>`
       : `<div class="ps-hero"><div class="pic"${picStyle(p)}>${icon(p.icon||"cup")}</div><div><h2>${esc(p.name)}</h2><p>${esc(p.desc||"")}</p></div></div>`}
     ${groups}
     <div class="ps-foot"><button class="btn red block" data-action="addLine">Tambah ke troli · ${rm2(pickPrice(p))}</button></div>`;
@@ -1304,7 +1310,7 @@ function renderCartBar(){
   $("#cartbar").classList.toggle("show", n>0 && !$("#sheet").classList.contains("show"));
   $$(".screen").forEach(s=>s.classList.toggle("has-cart", n>0));
   $("#cb-n").textContent=n; $("#cb-total").textContent=rm2(cartTotal());
-  $("#cb-earn").textContent=`+${Math.min(n,CONFIG.stampTarget)} cop · +${fmt(n*CONFIG.pointsPerPurchase)} point`;
+  $("#cb-earn").textContent=`+${Math.min(n,CONFIG.stampTarget)} cop · +${fmt(n*CONFIG.pointsPerApp)} point`;
   $("#m-cartpill").textContent=`${n} item`;
   void onMenu;
 }
@@ -1372,7 +1378,7 @@ function pickupOptions(st){
 }
 function openCart(){
   if(!cart.length){ openSheet(`<h2>Troli kosong</h2><p>Pilih item dari menu untuk mula pesan.</p><button class="btn block" data-action="close" data-go="menu">Lihat menu</button>`); return; }
-  const n=cart.length, P=CONFIG.pointsPerPurchase;
+  const n=cart.length, P=CONFIG.pointsPerApp;
   openSheet(`
     <h2>Troli anda</h2><p>Pickup sahaja: ambil sendiri di kaunter ${esc(CONFIG.brand)}.</p>
     <div>${cart.map((c,i)=>`<div class="cart-line"><span class="q">1×</span><div class="d"><b>${esc(c.name)}</b><span>${esc(c.opts||"Tiada pilihan tambahan")}</span></div><span class="pr">${rm2(c.price)}</span><button class="rm" data-rmline="${i}" aria-label="Buang ${esc(c.name)}">${icon("trash","width:17px;height:17px")}</button></div>`).join("")}</div>
@@ -1423,7 +1429,7 @@ async function placeOrder(){
     : pDate ? { label:opt[1], at:+pMin, date:pDate, pre:true } : { label:opt[1], at:+pMin };
   const pay = ckPay==="DuitNow" && SHOP.qr ? "DuitNow" : "Kaunter";
   if(pay==="DuitNow" && !ckProof){ toast("Sila muat naik bukti bayaran DuitNow dahulu"); document.querySelector(".proof-up")?.scrollIntoView({behavior:"smooth",block:"center"}); return; }
-  const n=cart.length, P=CONFIG.pointsPerPurchase, total=+cartTotal().toFixed(2);
+  const n=cart.length, P=CONFIG.pointsPerApp, total=+cartTotal().toFixed(2);
   let orders=[]; try{ orders=JSON.parse(localStorage.getItem(SHARED.orders)||"[]"); }catch(e){}
   placing = true; $$('[data-action="placeOrder"]').forEach(b=>{ b.disabled=true; b.textContent="Menghantar…"; });
   let no;
