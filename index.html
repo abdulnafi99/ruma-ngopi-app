@@ -1222,18 +1222,26 @@ function renderMenu(){
     <button class="tile prod" data-prod="${p.id}">
       ${imgOf(p) ? `<div class="pic img"><img src="${imgOf(p)}" alt="" loading="lazy" decoding="async"></div>` : `<div class="pic"${picStyle(p)}>${icon(p.icon||"cup")}</div>`}
       <b>${esc(p.name)}</b><span class="sub">${esc(p.desc||"")}</span>
-      <div class="row2"><span class="pr">${rm2(p.price)}</span><span class="plus">${icon("plus")}</span></div>
+      <div class="row2"><span class="pr">${(f=>`${f.from?'<small style="font-weight:500;font-size:10.5px">dari </small>':""}${rm2(f.v)}`)(fromPrice(p))}</span><span class="plus">${icon("plus")}</span></div>
     </button>`).join("") || `<div class="tile span2 empty">Tiada item dalam kategori ini</div>`;
 }
 function openProduct(id){
   const p=CONFIG.menu.find(x=>x.id===id); if(!p) return;
   pick={pid:id, sel:{}}; limitNote=null;
-  (p.groups||[]).forEach(g=>{ if(g.type==="single"){ const f=actOpts(g)[0]; pick.sel[g.id]=g.required&&f?f.id:null; } else pick.sel[g.id]={}; });
+  (p.groups||[]).forEach(g=>{ if(g.type==="single"){ const f=actOpts(g)[0]; pick.sel[g.id]=(g.required||g.priceMode==="set")&&f?f.id:null; } else pick.sel[g.id]={}; });
   openSheet(`<div id="ps"></div>`); renderProduct();
 }
 function groupCount(g){ return Object.entries(pick.sel[g.id]||{}).reduce((a,[oid,q])=>a+(actOpts(g).some(o=>o.id===oid)?q:0),0); }
+/* Kumpulan "harga penuh" (cth. Saiz Regular RM5 / Large RM6): harga pilihan = harga item, harga asas diabaikan */
+const priceGroup = p => (p.groups||[]).find(g=>g.type==="single" && g.priceMode==="set" && actOpts(g).length);
+function fromPrice(p){
+  const g=priceGroup(p); if(!g) return { v:+p.price||0, from:false };
+  const ps=actOpts(g).map(o=>+o.price||0);
+  return { v:Math.min(...ps), from:new Set(ps).size>1 };
+}
 function pickPrice(p){
-  let t=p.price;
+  const pg=priceGroup(p);
+  let t = pg && pick.sel[pg.id] ? 0 : p.price;
   (p.groups||[]).forEach(g=>{
     if(g.type==="single"){ const o=actOpts(g).find(o=>o.id===pick.sel[g.id]); if(o) t+=o.price; }
     else actOpts(g).forEach(o=>{ t+=(pick.sel[g.id][o.id]||0)*o.price; });
@@ -1245,7 +1253,7 @@ function renderProduct(){
   const groups=(p.groups||[]).map(g=>{
     const opts=actOpts(g); if(!opts.length) return "";
     if(g.type==="single") return `<div class="grp"><div class="grp-h"><b>${esc(g.name)}</b><small class="${g.required?"req":""}">${g.required?"Pilih 1 · wajib":"Pilih 1 · pilihan"}</small></div>
-      <div class="opts">${opts.map(o=>`<label class="radio"><input type="radio" name="g-${g.id}" value="${o.id}" data-g="${g.id}" ${pick.sel[g.id]===o.id?"checked":""}><span>${esc(o.name)}</span><em>+${rm2(o.price)}</em></label>`).join("")}</div></div>`;
+      <div class="opts">${opts.map(o=>`<label class="radio"><input type="radio" name="g-${g.id}" value="${o.id}" data-g="${g.id}" ${pick.sel[g.id]===o.id?"checked":""}><span>${esc(o.name)}</span><em>${g.priceMode==="set"?rm2(o.price):"+"+rm2(o.price)}</em></label>`).join("")}</div></div>`;
     const tot=groupCount(g), full=g.max>0&&tot>=g.max;
     return `<div class="grp"><div class="grp-h"><b>${esc(g.name)}</b><small>${g.max>0?`Pilih sehingga ${g.max} · ${tot}/${g.max}`:`Pilihan · ${tot} dipilih`}</small></div>
       <div class="opts">${opts.map(o=>{const q=pick.sel[g.id][o.id]||0, hit=q>=(o.max||99);

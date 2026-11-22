@@ -18,6 +18,7 @@ Ditulis sepenuhnya dalam **HTML, CSS dan JavaScript vanilla**, dalam satu fail `
 - **App pelanggan → Order → Menu**: kategori, produk, add-on dan troli. Setiap item dalam pesanan beri **1 cap** dan point ikut tetapan.
 - **Add-on "pilih banyak + kuantiti"**: setiap pilihan ada **had kuantiti per item** (contohnya Whip cream maks 1, Extra shot maks 2), dan kumpulan boleh ada had jumlah. Bila had dicapai, pelanggan diberitahu untuk tambah item yang sama ke troli sekali lagi.
 - **Add-on "pilih satu"**: radio, boleh jadi wajib (contohnya Saiz Regular / Large +RM1).
+- **Harga penuh** (kumpulan pilih satu): hidupkan bila harga pilihan ialah harga sebenar minuman (cth. Saiz: Regular RM5, Large RM6). Harga asas item diabaikan, jadi tiada kira dua kali. Admin diberi amaran semasa simpan jika harga pilihan nampak macam harga penuh tetapi suis belum dihidupkan. Kad menu pelanggan tunjuk "dari RM5.00".
 - **Admin → Menu & add-on** ada dua bahagian:
   - **Item menu**: tambah atau edit produk (nama, harga, kategori, ikon, kumpulan add-on khusus) dan aktif/sembunyi.
   - **Add-on**: senarai semua kumpulan add-on (cth. Saiz, Add On) yang dikongsi antara item. Edit sekali (nama pilihan, harga, had, aktif) dan perubahan dikenakan pada semua item yang dipilih. Pilih item satu per satu atau ikut kategori; tambah/padam add-on untuk banyak item sekaligus.
