@@ -559,7 +559,7 @@ label.btn{cursor:pointer}
           <table class="table">
             <thead><tr>
               <th data-sort="name">Ahli</th><th data-sort="tier" class="hide-m">Tahap</th>
-              <th data-sort="stamps" class="hide-m">Cap</th><th data-sort="points" class="num">Point</th>
+              <th data-sort="stamps" class="hide-m">Cup</th><th data-sort="points" class="num">Point</th>
               <th data-sort="last" class="num hide-m">Lawatan akhir</th>
             </tr></thead>
             <tbody id="memBody"></tbody>
@@ -651,10 +651,10 @@ label.btn{cursor:pointer}
       </div>
       <div class="grid g2">
         <div class="tile">
-          <h3>Peraturan cap &amp; point</h3>
-          <label class="field"><span>Cap untuk 1 minuman percuma (1 item = 1 cap)</span><input class="input mono" type="number" min="4" max="20" id="setStamp"></label>
+          <h3>Peraturan cup &amp; point</h3>
+          <label class="field"><span>Cup untuk 1 minuman percuma (1 item = 1 cup)</span><input class="input mono" type="number" min="4" max="20" id="setStamp"></label>
           <label class="field"><span>Point setiap item</span><input class="input mono" type="number" min="1" max="500" id="setPts"></label>
-          <label class="field"><span>Ganjaran bila kad cap penuh</span><input class="input" id="setStampReward" maxlength="40" placeholder="cth. Minuman Percuma"></label>
+          <label class="field"><span>Ganjaran bila kad cup penuh</span><input class="input" id="setStampReward" maxlength="40" placeholder="cth. Minuman Percuma"></label>
           <button class="btn red" data-action="saveSettings">Simpan tetapan</button>
           <p class="note" style="margin-top:12px">Perubahan terus digunakan oleh app pelanggan dalam pelayar yang sama.</p>
         </div>
@@ -837,7 +837,7 @@ function seedDB(){
         const t=ADMIN.drinks[Math.floor(r()*ADMIN.drinks.length)]+(n>1?` ×${n}`:"");
         tx.push({ts,id:m.id,k:"buy",t,p:P*n,n});
         m.points+=P*n;m.lifetime+=P*n;m.last=Math.max(m.last,ts);m.stamps+=n;
-        if(m.stamps>=T){m.stamps-=T;m.redeemed++;tx.push({ts:ts+60e3,id:m.id,k:"redeem",t:"Minuman Percuma (kad cap)",p:0});}
+        if(m.stamps>=T){m.stamps-=T;m.redeemed++;tx.push({ts:ts+60e3,id:m.id,k:"redeem",t:"Minuman Percuma (kad cup)",p:0});}
         const affordable=ADMIN.defaultRewards.filter(x=>x.pts<=m.points);
         if(affordable.length&&r()<.16){const rw=affordable[Math.floor(r()*affordable.length)];m.points-=rw.pts;m.redeemed++;tx.push({ts:ts+120e3,id:m.id,k:"redeem",t:rw.name,p:-rw.pts});}
       }
@@ -856,7 +856,7 @@ function liveDB(map){
     const hist=Array.isArray(m.history)?m.history:[];
     members.push({id:m.memberId,name:m.name||"Ahli",phone:m.phone||"",points:+m.points||0,lifetime:+m.lifetime||0,stamps:+m.stamps||0,redeemed:+m.redeemed||0,
       last:hist.reduce((a,h)=>Math.max(a,h.ts||0),0),joined:m.joined||m.updatedAt||Date.now()});
-    hist.forEach(h=>tx.push({ts:h.ts,id:m.memberId,k:h.p>0?"buy":(h.p<0||/kad cap|percuma/i.test(h.t))?"redeem":"adjust",t:h.t,p:h.p,n:h.n||(h.p>0?Math.max(1,Math.round(h.p/SETTINGS.pointsPerPurchase)):0)}));
+    hist.forEach(h=>tx.push({ts:h.ts,id:m.memberId,k:h.p>0?"buy":(h.p<0||/kad c[au]p|percuma/i.test(h.t))?"redeem":"adjust",t:h.t,p:h.p,n:h.n||(h.p>0?Math.max(1,Math.round(h.p/SETTINGS.pointsPerPurchase)):0)}));
   });
   return {members,tx,live:true};
 }
@@ -898,7 +898,7 @@ const allMembers=()=>LIVE?DB.members:[custAsMember(),...DB.members];
 const getMember=id=>allMembers().find(m=>m.id===id);
 function allTx(){
   if(LIVE) return [...DB.tx].sort((a,b)=>b.ts-a.ts);
-  const c=CUST.history.map(h=>({ts:h.ts,id:CUST.memberId,k:h.p>0?"buy":(h.p<0||/kad cap|percuma/i.test(h.t))?"redeem":"adjust",t:h.t,p:h.p,n:h.n||(h.p>0?Math.max(1,Math.round(h.p/SETTINGS.pointsPerPurchase)):0)}));
+  const c=CUST.history.map(h=>({ts:h.ts,id:CUST.memberId,k:h.p>0?"buy":(h.p<0||/kad c[au]p|percuma/i.test(h.t))?"redeem":"adjust",t:h.t,p:h.p,n:h.n||(h.p>0?Math.max(1,Math.round(h.p/SETTINGS.pointsPerPurchase)):0)}));
   return [...DB.tx,...c].sort((a,b)=>b.ts-a.ts);
 }
 /* Ubah ahli — tulis ke tempat yang betul */
@@ -1044,17 +1044,17 @@ function renderCounterMember(){
     <div class="tile red" style="margin-bottom:14px">
       <div class="member-card"><div class="av lg" style="background:#fff;color:var(--brand)">${esc(m.name[0])}</div>
         <div class="n"><b>${esc(m.name)}</b><span>${fmtId(m.id)} · ${tierOf(m.lifetime)}</span></div></div>
-      <div class="mc-stats"><div><span>Point</span><b>${fmt(m.points)}</b></div><div><span>Kad cap</span><b>${m.stamps}/${T}</b></div></div>
+      <div class="mc-stats"><div><span>Point</span><b>${fmt(m.points)}</b></div><div><span>Kad cup</span><b>${m.stamps}/${T}</b></div></div>
       <div class="stamps-row" style="grid-template-columns:repeat(${T},1fr)">${Array.from({length:T},(_,i)=>`<i class="${i<m.stamps?"on":""}"></i>`).join("")}</div>
     </div>
     <div class="tile" style="margin-bottom:14px">
       <h3>Rekod pembelian</h3>
       <div class="row" style="margin-bottom:14px">
         <div class="stepper"><button data-action="qty" data-d="-1" aria-label="Kurang">${icon("minus")}</button><b id="qty">${qty}</b><button data-action="qty" data-d="1" aria-label="Tambah">${icon("plus")}</button></div>
-        <div class="grow note" style="font-size:13px;color:var(--ink-2)">minuman → <b class="mono">+${qty}</b> cap, <b class="mono">+${fmt(qty*P)}</b> point</div>
+        <div class="grow note" style="font-size:13px;color:var(--ink-2)">minuman → <b class="mono">+${qty}</b> cup, <b class="mono">+${fmt(qty*P)}</b> point</div>
       </div>
       <button class="btn red block" data-action="recordBuy">${icon("check")}Rekod pembelian</button>
-      ${full?`<button class="btn block" style="margin-top:10px" data-action="claimStamp">${icon("gift")}Tebus minuman percuma (kad cap penuh)</button>`:""}
+      ${full?`<button class="btn block" style="margin-top:10px" data-action="claimStamp">${icon("gift")}Tebus minuman percuma (kad cup penuh)</button>`:""}
     </div>
     <div class="tile">
       <h3>Tebus ganjaran untuk ahli ini</h3>
@@ -1069,12 +1069,12 @@ function recordBuy(){
   const T=SETTINGS.stampTarget,P=SETTINGS.pointsPerPurchase,n=qty;
   const t=LIVE ? `Pembelian di kaunter${n>1?` (${n} item)`:""}` : ADMIN.drinks[Math.floor(Math.random()*ADMIN.drinks.length)]+(n>1?` ×${n}`:"");
   updateMember(counterId,x=>{x.points+=P*n;x.lifetime+=P*n;x.stamps=Math.min(T,x.stamps+n);},{ts:Date.now(),k:"buy",t,p:P*n,n});
-  toast(`+${n} cap · +${fmt(P*n)} point untuk ${m.name.split(" ")[0]}`); qty=1; renderCounterMember();
+  toast(`+${n} cup · +${fmt(P*n)} point untuk ${m.name.split(" ")[0]}`); qty=1; renderCounterMember();
 }
 function claimStamp(){
   const m=getMember(counterId); if(!m||m.stamps<SETTINGS.stampTarget) return;
-  updateMember(counterId,x=>{x.stamps=0;x.redeemed++;},{ts:Date.now(),k:"redeem",t:"Minuman Percuma (kad cap)",p:0});
-  toast("Minuman percuma ditebus · kad cap diset semula"); renderCounterMember();
+  updateMember(counterId,x=>{x.stamps=0;x.redeemed++;},{ts:Date.now(),k:"redeem",t:"Minuman Percuma (kad cup)",p:0});
+  toast("Minuman percuma ditebus · kad cup diset semula"); renderCounterMember();
 }
 function redeemFor(rid){
   const r=REWARDS.find(x=>x.id===rid), m=getMember(counterId); if(!r||!m||m.points<r.pts) return;
@@ -1156,7 +1156,7 @@ function openMember(id){
     <div class="grid g2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
       <div class="tile dark" style="padding:14px"><div class="label">Point</div><div class="kpi" style="font-size:24px;margin-top:8px">${fmt(m.points)}</div></div>
       <div class="tile" style="padding:14px"><div class="label">Tahap</div><div style="margin-top:10px"><span class="tier ${tierOf(m.lifetime)}">${tierOf(m.lifetime)}</span></div><div class="note" style="margin-top:6px">${fmt(m.lifetime)} terkumpul</div></div>
-      <div class="tile" style="padding:14px"><div class="label">Kad cap</div><div class="kpi" style="font-size:24px;margin-top:8px">${m.stamps}/${T}</div></div>
+      <div class="tile" style="padding:14px"><div class="label">Kad cup</div><div class="kpi" style="font-size:24px;margin-top:8px">${m.stamps}/${T}</div></div>
       <div class="tile" style="padding:14px"><div class="label">Tebusan</div><div class="kpi" style="font-size:24px;margin-top:8px">${m.redeemed}</div></div>
     </div>
     <div class="tile" style="margin-bottom:14px">
@@ -1177,7 +1177,7 @@ function adjust(id){
   toast(`${amt>0?"+":""}${amt} point untuk ${m.name.split(" ")[0]}`); openMember(id); renderScreen();
 }
 function exportCSV(){
-  const rows=[["Nama","ID ahli","Tahap","Point","Point terkumpul","Cap","Tebusan","Lawatan akhir"]];
+  const rows=[["Nama","ID ahli","Tahap","Point","Point terkumpul","Cup","Tebusan","Lawatan akhir"]];
   allMembers().forEach(m=>rows.push([m.name,m.id,tierOf(m.lifetime),m.points,m.lifetime,m.stamps,m.redeemed,m.last?new Date(m.last).toISOString().slice(0,10):""]));
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv"})); a.download=`ahli-rumangopi-${new Date().toISOString().slice(0,10)}.csv`; a.click();
@@ -1767,7 +1767,7 @@ function acceptOrder(no){
   write(ADMIN.keys.orders,list); ORDERS=list;
   if(getMember(o.memberId)) updateMember(o.memberId,x=>{x.points+=pts;x.lifetime+=pts;x.stamps=Math.min(T,x.stamps+n);},{ts:Date.now(),k:"buy",t:`Pesanan #${no} (${n} item)`,p:pts,n},true);
   if(LIVE) window.RN.notify("order.status",{no,status:"Disediakan"});
-  closeSheet(); renderOrders(); renderOrderBadge(); toast(`#${no} diterima · +${n} cap & +${fmt(pts)} point untuk ${o.name.split(" ")[0]}`);
+  closeSheet(); renderOrders(); renderOrderBadge(); toast(`#${no} diterima · +${n} cup & +${fmt(pts)} point untuk ${o.name.split(" ")[0]}`);
 }
 function rejectOrder(no, reason){
   const list=read(ADMIN.keys.orders,[]), o=list.find(x=>x.no===no); if(!o||o.status!=="Baru") return;
