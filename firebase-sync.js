@@ -5,7 +5,7 @@
      store/menu, store/rewards, store/settings, store/shop   ← admin tulis, semua baca
      (Firestore) images/{pid}, promos/{id}                   ← gambar item & promosi (firebase-media.js)
      users/{uid}            { memberId, phone, name }        ← akaun pelanggan → kad ahli
-     members/{memberId}     kad ahli (point, cap, sejarah, ownerUid)
+     members/{memberId}     kad ahli (point, cop, sejarah, ownerUid)
      orders/{no}                                             ← pesanan pickup
      vouchers/{code}                                         ← baucar ganjaran
      counters/orderNo                                        ← nombor pesanan seterusnya
@@ -271,7 +271,7 @@ RN.nextOrderNo = async () => {
     return r.committed ? "A" + r.snapshot.val() : fallback;
   }catch(e){ return fallback; }
 };
-/* Admin ubah point/cap ahli secara atomik (tidak tindih perubahan dari telefon pelanggan) */
+/* Admin ubah point/cop ahli secara atomik (tidak tindih perubahan dari telefon pelanggan) */
 RN.txMember = (id, fn, txEntry) => runTransaction(ref(db, `members/${id}`), m => {
   if(!m) return m;
   m.history = arr(m.history);
